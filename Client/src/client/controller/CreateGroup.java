@@ -52,12 +52,13 @@ public class CreateGroup implements ActionListener {
 	} // create ()
 	
 	private void invitation () {
+
 		Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					master.Invitation("toto", 9301);
-				} catch (IOException e) {
+				} catch (IOException | InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
@@ -66,12 +67,14 @@ public class CreateGroup implements ActionListener {
 			@Override
 			public void run() {
 				JFrame f = new JFrame(); JButton start = new JButton("Start discussion");
-				/*start.addActionListener(new ActionListener() {
+				start.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
+						System.out.println("merde");
 						master.set_start(true);
+						System.out.println("zut");
 					}
-				});*/
+				});
 				f.add(start); f.pack(); f.setVisible(true);
 				
 			}

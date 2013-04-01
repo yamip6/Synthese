@@ -1,11 +1,16 @@
 package clientMaster;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.util.*;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
 
 import clientSupreme.talking;
 
@@ -30,8 +35,12 @@ public class ClientMaster implements talking {
 	/** Port of a client */
 	private int _portClient;
 	private DataOutputStream _outStream;
-	private boolean _start;
+	private volatile boolean _start = false;
+	private volatile boolean _loop = true;
 
+	private InetAddress _ipGroup; // trial, his value is written in the source code => 
+	// the clientMaster and the clients may choose one ? We'll see.
+	private MulticastSocket _socketEmission;
 
 	/**
 	 * Constructor
@@ -52,7 +61,9 @@ public class ClientMaster implements talking {
 			_sockBroadcast = null;
 			_portServer = portServer;
 			_portClient = 9301;
-			_start = false;
+			_ipGroup = InetAddress.getByName("239.255.80.84");
+			_socketEmission = new MulticastSocket();
+			_socketEmission.joinGroup(_ipGroup);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -115,55 +126,28 @@ public class ClientMaster implements talking {
 	 * @param nameGroup the client Master's group
 	 * @param portClient the port of the clients
 	 * @throws IOException
+	 * @throws InterruptedException 
 	 */
-	public void Invitation(String nameGroup, int portClient) throws IOException {
-
-		Enumeration<NetworkInterface> interfaces =
-			    NetworkInterface.getNetworkInterfaces();
-			while (interfaces.hasMoreElements()) {
-			  NetworkInterface networkInterface = interfaces.nextElement();
-			  if (networkInterface.isLoopback())
-			    continue;    // Don't want to broadcast to the loopback interface
-			  for (InterfaceAddress interfaceAddress :
-			           networkInterface.getInterfaceAddresses()) {
-			    InetAddress broadcast = interfaceAddress.getBroadcast();
-			    if (broadcast == null)
-			      continue;
-			    
-			    byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation	
-				byte[] receiveDtg = new byte[1024]; // answers from interested clients
-			
-				_sockBroadcast = new DatagramSocket(_portClient);
-				_sockBroadcast.setBroadcast(true);
-				_sockBroadcast.send(new DatagramPacket(invitation, invitation.length,
-						broadcast, _portClient));
-				// The client (bis) will stop the loop when he wants, so the discussion could begin
-				while (!_start) {
-					//if(_start)break;
-					_sockBroadcast.send(new DatagramPacket(invitation, invitation.length,
-							broadcast, _portClient));
-					DatagramPacket reception = new DatagramPacket(receiveDtg,receiveDtg.length);
-					_sockBroadcast.receive(reception);
-					_clientsAccepted.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 										
-				}
-			  }
-			}
-
-	/*	byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation	
+	public void Invitation(String nameGroup, int portClient) throws IOException, InterruptedException {
+		
+		byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation	
 		byte[] receiveDtg = new byte[1024]; // answers from interested clients
-	
-		_sockBroadcast = new DatagramSocket(_portClient);
-		_sockBroadcast.setBroadcast(true);
-		_sockBroadcast.send(new DatagramPacket(invitation, invitation.length,
-				InetAddress.getByName("255.255.255.255"), _portClient));
-		// The client (bis) will stop the loop when he wants, so the discussion could begin
-		while (!_start) {
-			//if(_start)break;
-			DatagramPacket reception = new DatagramPacket(receiveDtg,receiveDtg.length);
-			_sockBroadcast.receive(reception);
-			_clientsAccepted.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 										
-		}*/
 
+		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, _portClient);
+		// The client (bis) will stop the loop when he wants, so the discussion could begin
+		while (_loop) {
+			_socketEmission.send(toSend);
+			DatagramPacket reception = new DatagramPacket(receiveDtg,receiveDtg.length);
+			if(_start){
+				byte[] stop = new String("stop").getBytes();
+				toSend = new DatagramPacket(stop, stop.length, _ipGroup, _portClient);
+				_socketEmission.send(toSend);
+				break;
+			}
+			_socketEmission.receive(reception);
+			_clientsAccepted.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 										
+		}
+		
 	} // Invitation ()
 	
 	/**

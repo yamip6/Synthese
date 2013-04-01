@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -31,6 +32,10 @@ public class ClientSlave implements talking{
 	/** communication between the clients (slave) and the client master */
 	private Socket _sockClientBis;
 	
+	private InetAddress _ipGroup; // trial
+	private MulticastSocket _socketReception;
+	
+	
 	/**
 	 * Constructor
 	 */
@@ -38,8 +43,11 @@ public class ClientSlave implements talking{
 		_portBis	= 9300; // We considerate port 9300 for the clients Bis
 		_portClient = 9301;
 		try {
-			_sockBroadcast = new DatagramSocket(_portClient);
-		} catch (SocketException e) {
+			_ipGroup = InetAddress.getByName("239.255.80.84");
+			_socketReception = new MulticastSocket(_portClient);
+			_socketReception.joinGroup(_ipGroup);
+			//_sockBroadcast = new DatagramSocket(_portClient);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
@@ -52,13 +60,26 @@ public class ClientSlave implements talking{
 	public void receiveInvitation () throws IOException{
 		assert(_listGroups != null);
 		byte[] receiveDtg = new byte[1024];
-		DatagramPacket invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
-		_sockBroadcast.receive(invitation);
-		System.out.println("coucou");
-		String grpInvitation = invitation.getData().toString();
-		_listGroups.put(invitation.getAddress(), grpInvitation); // add the sender's ip (client bis) and group name
+		byte[] ack = new byte[1024];
+		DatagramPacket invitation, confirm;
+		while(true){
+			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
+			_socketReception.receive(invitation);
+			System.out.println("coucou");
+			String grpInvitation = new String(invitation.getData(), 0, invitation.getLength());
+			System.out.println(grpInvitation);
+			ack = new String (" ").getBytes();
+			confirm = new DatagramPacket(ack, ack.length, invitation.getAddress(), invitation.getPort());
+			_socketReception.send(confirm);
+			if (grpInvitation.equals("stop"))break;
+			_listGroups.put(invitation.getAddress(), grpInvitation);
+		}
 		ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(new File("log.txt")));
 		os.writeObject(get_listGroups());
+		/*_sockBroadcast.receive(invitation);
+		System.out.println("coucou");
+		String grpInvitation = invitation.getData().toString();
+		_listGroups.put(invitation.getAddress(), grpInvitation);*/ // add the sender's ip (client bis) and group name
 		assert(_listGroups.size() > 0);
 	} // receiveInvitation ()
 	
