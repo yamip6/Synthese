@@ -64,6 +64,7 @@ public class ClientMaster implements talking {
 			_ipGroup = InetAddress.getByName("239.255.80.84");
 			_socketEmission = new MulticastSocket();
 			_socketEmission.joinGroup(_ipGroup);
+			_clientsAccepted = new ArrayList<InetAddress>();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -133,11 +134,12 @@ public class ClientMaster implements talking {
 		byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation	
 		byte[] receiveDtg = new byte[1024]; // answers from interested clients
 
+		DatagramPacket reception;
 		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, _portClient);
 		// The client (bis) will stop the loop when he wants, so the discussion could begin
 		while (_loop) {
 			_socketEmission.send(toSend);
-			DatagramPacket reception = new DatagramPacket(receiveDtg,receiveDtg.length);
+			reception = new DatagramPacket(receiveDtg,receiveDtg.length);
 			if(_start){
 				byte[] stop = new String("stop").getBytes();
 				toSend = new DatagramPacket(stop, stop.length, _ipGroup, _portClient);
@@ -145,7 +147,9 @@ public class ClientMaster implements talking {
 				break;
 			}
 			_socketEmission.receive(reception);
-			_clientsAccepted.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 										
+			System.out.println(reception.getAddress());
+			_clientsAccepted.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
+			System.out.println("Client added");
 		}
 		
 	} // Invitation ()

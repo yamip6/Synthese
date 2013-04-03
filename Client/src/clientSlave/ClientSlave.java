@@ -35,6 +35,8 @@ public class ClientSlave implements talking{
 	private InetAddress _ipGroup; // trial
 	private MulticastSocket _socketReception;
 	
+	private volatile boolean _loop = true;
+	
 	
 	/**
 	 * Constructor
@@ -46,6 +48,7 @@ public class ClientSlave implements talking{
 			_ipGroup = InetAddress.getByName("239.255.80.84");
 			_socketReception = new MulticastSocket(_portClient);
 			_socketReception.joinGroup(_ipGroup);
+			_listGroups = new HashMap<InetAddress,String>();
 			//_sockBroadcast = new DatagramSocket(_portClient);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -62,17 +65,19 @@ public class ClientSlave implements talking{
 		byte[] receiveDtg = new byte[1024];
 		byte[] ack = new byte[1024];
 		DatagramPacket invitation, confirm;
-		while(true){
+		while(_loop){
 			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
 			_socketReception.receive(invitation);
 			System.out.println("coucou");
 			String grpInvitation = new String(invitation.getData(), 0, invitation.getLength());
+			_listGroups.put(invitation.getAddress(), grpInvitation);
 			System.out.println(grpInvitation);
-			ack = new String (" ").getBytes();
+			System.out.println("ip : " + invitation.getAddress());
+			ack = _socketReception.getLocalAddress().getAddress();
 			confirm = new DatagramPacket(ack, ack.length, invitation.getAddress(), invitation.getPort());
 			_socketReception.send(confirm);
-			if (grpInvitation.equals("stop"))break;
-			_listGroups.put(invitation.getAddress(), grpInvitation);
+			if (grpInvitation.equals("stop")){System.out.println("loopBeg");_loop=false;System.out.println("End");}
+			
 		}
 		ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(new File("log.txt")));
 		os.writeObject(get_listGroups());
