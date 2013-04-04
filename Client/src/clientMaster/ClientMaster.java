@@ -22,8 +22,7 @@ public class ClientMaster implements talking {
 	private ArrayList<Socket> _sockOthers;
 	/** communication broadcast from client master */
 	private DatagramSocket _sockBroadcast;
-	/** communication between the clients (slave) and the client master */
-	private Socket _sockClientBis;
+
 	/** port Server */
 	private int _portServer;
 	/** Address IP Server */
@@ -37,6 +36,8 @@ public class ClientMaster implements talking {
 	private DataOutputStream _outStream;
 	private volatile boolean _start = false;
 	private volatile boolean _loop = true;
+	
+	private InetAddress _ipNext = null;
 
 	private InetAddress _ipGroup; // trial, his value is written in the source code => 
 	// the clientMaster and the clients may choose one ? We'll see.
@@ -84,15 +85,6 @@ public class ClientMaster implements talking {
 		_sockClient.close();
 	}
 
-	/**
-	 * Close the socket which permits communication between client master and
-	 * client(s)
-	 * 
-	 * @throws IOException
-	 */
-	public void closeConnexionClient() throws IOException {
-		_sockClientBis.close();
-	}
 
 	/**
 	 * Used by a client to request a creation of a group to the server
@@ -148,9 +140,11 @@ public class ClientMaster implements talking {
 			}
 			_socketEmission.receive(reception);
 			System.out.println(reception.getAddress());
-			_clientsAccepted.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
-			System.out.println("Client added");
+			if (!_clientsAccepted.contains(reception.getAddress()))
+				_clientsAccepted.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
+				System.out.println("Client added");
 		}
+		System.out.println("exit loop");
 		
 	} // Invitation ()
 	
@@ -160,15 +154,28 @@ public class ClientMaster implements talking {
 	 * @throws IOException
 	 */
 	public void creationGroupDiscussion () throws IOException {
-		for (int i = 0; i < _clientsAccepted.size(); ++i){
-			_sockOthers.add(new Socket(_clientsAccepted.get(i), _portClient));
-			Socket tmp = _sockOthers.get(i);
-			DataOutputStream os = new DataOutputStream(tmp.getOutputStream());
-			os.writeBytes(_clientsAccepted.get(i+1).getHostName() + '\n'); // Line
-			os.close();
+		DataOutputStream os = null; int i = 1; System.out.println(_clientsAccepted);
+		_sockOthers.add(new Socket(_clientsAccepted.get(0), _portClient)); // Problème sur cette ligne, n'arrive pas à construire la socket alors que _clientsAccepted est rempli
+		os = new DataOutputStream(_sockOthers.get(0).getOutputStream()); // clientMaster bound to first client
+		os.writeBytes(_clientsAccepted.get(i).getHostAddress() + '\n'); // next
+		os.writeBytes(_adressMaster.getHostAddress() + '\n'); // prev
+		os.close();
+		if (_clientsAccepted.size() > 1){
+			for (; i < _clientsAccepted.size() - 1; ++i){
+				_sockOthers.add(new Socket(_clientsAccepted.get(i), _portClient));
+				Socket tmp = _sockOthers.get(i);
+				os = new DataOutputStream(tmp.getOutputStream());
+				os.writeBytes(_clientsAccepted.get(i+1).getHostAddress() + '\n'); // next
+				os.writeBytes(_clientsAccepted.get(i-1).getHostAddress() + '\n'); // prev
+				os.close();
+			}
 		}
-		for (int i = 1; i < _clientsAccepted.size(); ++i){
-			_sockOthers.get(i).close(); // except the first client for the beginning of the ring
+		os = new DataOutputStream(_sockOthers.get(i).getOutputStream()); // last client bound to clientMaster
+		os.writeBytes(_adressMaster.getHostAddress() + '\n');
+		os.close();
+		_ipNext = _sockOthers.get(0).getInetAddress();
+		for (int j = 1; j < _clientsAccepted.size(); ++j){
+			_sockOthers.get(j).close(); // except the first client for the beginning of the ring
 		}
 	} // creationGroupDiscussion()
 	
@@ -185,15 +192,21 @@ public class ClientMaster implements talking {
 	}
 
 	@Override
-	public void sendMessagetoChat() {
-		// TODO Auto-generated method stub
-		
+	public void sendMessagetoChat(String text) throws IOException {
+		assert(_sockOthers != null);
+		DataOutputStream outToClient = new DataOutputStream(_sockOthers.get(0).getOutputStream());
+		System.out.println("Preparation envoi");
+		outToClient.writeBytes(text + '\n');
+		System.out.println(text + " envoyé");
 	}
 
 	@Override
-	public void receiveMessageFromChat() {
-		// TODO Auto-generated method stub
-		
+	public String receiveMessageFromChat() throws IOException {
+		assert(_sockOthers != null);
+		BufferedReader bw = new BufferedReader(new InputStreamReader(_sockOthers.get(_sockOthers.size()-1).getInputStream()));
+		String rec = bw.readLine();
+		System.out.println("J'ai recu : " + rec);
+		return rec;
 	}
 
 	

@@ -1,11 +1,13 @@
 package clientSlave;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -32,10 +34,13 @@ public class ClientSlave implements talking{
 	/** communication between the clients (slave) and the client master */
 	private Socket _sockClientBis;
 	
+	private InetAddress _ipNext;
+	
 	private InetAddress _ipGroup; // trial
 	private MulticastSocket _socketReception;
 	
 	private volatile boolean _loop = true;
+	private InetAddress _ipPrev;
 	
 	
 	/**
@@ -44,6 +49,7 @@ public class ClientSlave implements talking{
 	public ClientSlave (){
 		_portBis	= 9300; // We considerate port 9300 for the clients Bis
 		_portClient = 9301;
+		_ipNext     = null;
 		try {
 			_ipGroup = InetAddress.getByName("239.255.80.84");
 			_socketReception = new MulticastSocket(_portClient);
@@ -70,14 +76,14 @@ public class ClientSlave implements talking{
 			_socketReception.receive(invitation);
 			System.out.println("coucou");
 			String grpInvitation = new String(invitation.getData(), 0, invitation.getLength());
-			_listGroups.put(invitation.getAddress(), grpInvitation);
 			System.out.println(grpInvitation);
 			System.out.println("ip : " + invitation.getAddress());
 			ack = _socketReception.getLocalAddress().getAddress();
 			confirm = new DatagramPacket(ack, ack.length, invitation.getAddress(), invitation.getPort());
 			_socketReception.send(confirm);
 			if (grpInvitation.equals("stop")){System.out.println("loopBeg");_loop=false;System.out.println("End");}
-			
+			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(grpInvitation)))
+				_listGroups.put(invitation.getAddress(), grpInvitation);
 		}
 		ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(new File("log.txt")));
 		os.writeObject(get_listGroups());
@@ -110,9 +116,12 @@ public class ClientSlave implements talking{
 		_sockClientBis = new Socket(ipClientBis, _portBis);
 		BufferedReader bw = new BufferedReader(new InputStreamReader(_sockClientBis.getInputStream()));
 		String ipNext = bw.readLine();
+		String ipPrev = bw.readLine();
 		bw.close();
 		_sockClientBis.close();
-		_sockNeighboor = new Socket(InetAddress.getByName(ipNext), _portClient);
+		_ipNext = InetAddress.getByName(ipNext);
+		_ipPrev = InetAddress.getByName(ipPrev);
+		_sockNeighboor = new Socket(InetAddress.getByName(ipNext), _portClient); 
 	} // linkNeighboor ()
 
 	// Get(s) :
@@ -128,15 +137,22 @@ public class ClientSlave implements talking{
 	// functions high level :
 	
 	@Override
-	public void sendMessagetoChat() {
-		// TODO Auto-generated method stub
-		
+	public void sendMessagetoChat(String text) throws IOException {
+		assert(_sockNeighboor != null);
+		DataOutputStream outToClient = new DataOutputStream(_sockNeighboor.getOutputStream());
+		System.out.println("Preparation envoi");
+		outToClient.write(text.getBytes());
+		System.out.println(text + " envoyé");
 	}
 
 	@Override
-	public void receiveMessageFromChat() {
-		// TODO Auto-generated method stub
-		
+	public String receiveMessageFromChat() throws IOException {
+		assert(_sockNeighboor != null);
+		Socket tmp = new Socket(_ipPrev, _portClient);
+		BufferedReader bw = new BufferedReader(new InputStreamReader(tmp.getInputStream()));
+		String rec = bw.readLine();
+		System.out.println("J'ai recu : " + rec);
+		return rec;
 	}
 
 }

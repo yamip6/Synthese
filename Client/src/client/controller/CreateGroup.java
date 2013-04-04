@@ -70,9 +70,14 @@ public class CreateGroup implements ActionListener {
 				start.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
-						System.out.println("merde");
 						master.set_start(true);
-						System.out.println("zut");
+						try {
+							// On considère 1 seul serveur 
+							master.creationGroupDiscussion();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				});
 				f.add(start); f.pack(); f.setVisible(true);
