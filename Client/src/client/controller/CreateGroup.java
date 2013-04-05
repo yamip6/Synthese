@@ -1,34 +1,28 @@
 package client.controller;
 
-import java.awt.Dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
 import client.ihm.MainPanel;
 import clientMaster.ClientMaster;
 
+import java.io.IOException;
+
 public class CreateGroup implements ActionListener {
 	
-	private ClientMaster master;
+	private ClientMaster _master;
 	private String _adressServer;
 	private int _portServer;
 	private MainPanel _mainPanel;
-
 	
-	
-	public CreateGroup (MainPanel pan) {
-		_mainPanel = pan;
-	}
+	public CreateGroup (MainPanel panel) {
+		_mainPanel = panel;
+	} // CreateGroup()
 	
 	private void create () {
-		String ip   = _mainPanel.get_ip().getText();
+		String ip = _mainPanel.get_ip().getText();
 		_adressServer = ip;
 		String portS = _mainPanel.get_port().getText();
 		int port;
@@ -39,12 +33,12 @@ public class CreateGroup implements ActionListener {
 		catch (NumberFormatException e){
 			e.printStackTrace();
 		}
-		master = new ClientMaster(_adressServer, _portServer);
+		_master = new ClientMaster(_adressServer, _portServer);
 		try {
-			master.requestCreationGroup("toto");
-			master.responseCreationGroup("toto");
+			_master.requestCreationGroup("toto"); // Test
+			_master.responseCreationGroup();
 			invitation();
-		} catch (IOException e) {
+		} catch (IOException | ClassNotFoundException e) {
 			//JOptionPane.showConfirmDialog(_formIP, "Address IP and Port must be number", "Error parsing", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
@@ -52,12 +46,11 @@ public class CreateGroup implements ActionListener {
 	} // create ()
 	
 	private void invitation () {
-
 		Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					master.Invitation("toto", 9301);
+					_master.Invitation("toto", 9301);
 				} catch (IOException | InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -70,27 +63,25 @@ public class CreateGroup implements ActionListener {
 				start.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
-						master.set_start(true);
+						_master.set_start(true);
 						try {
-							// On considère 1 seul serveur 
-							master.creationGroupDiscussion();
+							// On considère un seul serveur 
+							_master.creationGroupDiscussion();
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
 				});
-				f.add(start); f.pack(); f.setVisible(true);
-				
+				f.add(start); f.pack(); f.setVisible(true);			
 			}
 		});
 		t.start();
 		t2.start();
-	}
+	} // invitation ()
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		create();
-	}
+	} // actionPerformed ()
 
-}
+} // CreateGroup

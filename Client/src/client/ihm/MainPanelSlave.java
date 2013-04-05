@@ -1,11 +1,9 @@
 package client.ihm;
 
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import javax.swing.JButton;
 import javax.swing.JPanel;
+
+import java.awt.FlowLayout;
 
 import client.controller.JoinGroup;
 
@@ -20,6 +18,6 @@ public class MainPanelSlave extends JPanel {
 		_join.addActionListener(new JoinGroup());
 		setLayout(new FlowLayout());
 		add(_join);
-	}
+	} // MainPanelSlave ()
 
-}
+} // MainPanelSlave

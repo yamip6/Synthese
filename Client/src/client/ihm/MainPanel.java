@@ -1,13 +1,14 @@
 package client.ihm;
 
-import java.awt.*;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Label;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
 import client.controller.CreateGroup;
-
 
 public class MainPanel extends JPanel {
 
@@ -28,12 +29,10 @@ public class MainPanel extends JPanel {
 		f.add(new Label("Adress ip : ")); f.add(_ip);
 		f.add(new Label("Port : ")); f.add(_port); 
 		f.add(confirm); f.add(cancel);
-		f.pack(); f.setVisible(true);
-		
-	}
+		f.pack(); f.setVisible(true);	
+	} // formCreateGroupe ()
 	
-	public MainPanel (){
-		
+	public MainPanel () {		
 		setLayout(new FlowLayout());
 		_createGroup = new JButton("Create group", new ImageIcon("img\\add.png"));
 		_createGroup.addActionListener(new ActionListener() {
@@ -43,7 +42,7 @@ public class MainPanel extends JPanel {
 			}
 		});
 		add(_createGroup);
-	}
+	} // MainPanel ()
 
 	public JTextField get_ip() {
 		return _ip;
@@ -61,6 +60,4 @@ public class MainPanel extends JPanel {
 		this._port = _port;
 	}
 	
-	
-	
-}
+} // MainPanel

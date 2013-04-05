@@ -1,90 +1,56 @@
 package clientMaster;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.*;
-import java.util.*;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
-import clientSupreme.talking;
+import clientSupreme.Client;
 
-public class ClientMaster implements talking {
+import utils.Tools;
+import utils.Utils;
 
-	/** communication between the futur client master and the Server */
-	private Socket _sockClient;
-	/** List of clients (slave) for the client master (send ip to interconnect them) */
-	private ArrayList<Socket> _sockOthers;
-	/** communication broadcast from client master */
-	private DatagramSocket _sockBroadcast;
+public class ClientMaster extends Client {
 
-	/** port Server */
-	private int _portServer;
-	/** Address IP Server */
-	private InetAddress _adressServer;
-	/** Address IP of a client master */
-	private InetAddress		  _adressMaster;
-	/** List of the clients which accepted the invitation */
-	private ArrayList<InetAddress> _clientsAccepted;
-	/** Port of a client */
-	private int _portClient;
-	private DataOutputStream _outStream;
+	/** List of ip clients which accepted the invitation and are accepted to join the group */
+	private ArrayList<InetAddress> _acceptedClients;
+	
 	private volatile boolean _start = false;
 	private volatile boolean _loop = true;
-	
-	private InetAddress _ipNext = null;
-
-	private InetAddress _ipGroup; // trial, his value is written in the source code => 
-	// the clientMaster and the clients may choose one ? We'll see.
-	private MulticastSocket _socketEmission;
 
 	/**
 	 * Constructor
-	 * 
 	 * @param adressServer is the address of the server          
 	 * @param portServer is the port of the server         
 	 */
-	public ClientMaster(String adressServer, int portServer) {
-
-		_sockOthers = new ArrayList<Socket>();
-		_portServer = portServer;
-
+	public ClientMaster(String adressServer, int port) {
 		try {
-			_adressServer = InetAddress.getByName(adressServer);
-			_sockClient = new Socket(_adressServer, _portServer);
-			_outStream = new DataOutputStream(_sockClient.getOutputStream());
-			_sockOthers      = new ArrayList<Socket>();
-			_sockBroadcast = null;
-			_portServer = portServer;
-			_portClient = 9301;
-			_ipGroup = InetAddress.getByName("239.255.80.84");
-			_socketEmission = new MulticastSocket();
-			_socketEmission.joinGroup(_ipGroup);
-			_clientsAccepted = new ArrayList<InetAddress>();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+			// Vérification de l'existence d'une paire de clef
+			// Sauvegarde si necessaire (si un seul fichier est absent on régénère tout)
+			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
+				Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
+						
+			connectionServer(adressServer, port);
+			_groupIp = InetAddress.getByName("239.255.80.84"); // A voir
+			_broadcastSocket = new MulticastSocket();
+			_broadcastSocket.joinGroup(_groupIp);
+			_acceptedClients = new ArrayList<InetAddress>();
+		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | InvalidKeySpecException e) {
 			e.printStackTrace();
 		}
 
-	} // ClientMaster
-
-	// Functions low level :
-
-	/**
-	 * Close the socket which permits communication between server and client(s)
-	 * 
-	 * @throws IOException
-	 */
-	public void closeConnexionServer() throws IOException {
-		_sockClient.close();
-	}
-
+	} // ClientMaster ()
 
 	/**
 	 * Used by a client to request a creation of a group to the server
@@ -92,7 +58,12 @@ public class ClientMaster implements talking {
 	 * @throws IOException
 	 */
 	public void requestCreationGroup(String nameGroup) throws IOException {
-		_outStream.writeBytes("demande " + nameGroup + '\n');
+		send(CREATION);
+		
+		byte[] toSend = nameGroup.getBytes();
+		send(Utils.intToByteArray(toSend.length, 4));
+		send(toSend);
+		
 	} // requestCreationGroup ()
 
 	/**
@@ -100,18 +71,22 @@ public class ClientMaster implements talking {
 	 * @param nameGroupWished is the name of the group the client wants
 	 * @return boolean
 	 * @throws IOException
+	 * @throws ClassNotFoundException 
 	 */
-	public Boolean responseCreationGroup(String nameGroupWished)throws IOException {
-		BufferedReader bf = new BufferedReader(new InputStreamReader(_sockClient.getInputStream()));
-		String response = bf.readLine();
-		String correctAnswer = "ok " + nameGroupWished;
-		System.out.println("rep : " + response);
-		if (correctAnswer.equals(response)) {
-			_adressMaster = _sockClient.getLocalAddress(); // my IP for the others clients
-			return true;
-		} else {
-			return false;
+	public Boolean responseCreationGroup()throws IOException, ClassNotFoundException {
+		byte[] response = receive(2);
+		if(Arrays.equals(response, OK)) {
+		    byte[] size = receive(4);
+		    byte[] grpWished = receive(Utils.byteArrayToInt(size));
+		    System.out.println("Response OK : " + new String(grpWished)); // DEBUG
+		    return true;
+		} else if(Arrays.equals(response, NOK)) {
+			/*byte[] size = receive(4);
+		    byte[] grpWished = receive(Utils.byteArrayToInt(size)); // + Raison Echec*/
+		    return false;
 		}
+		return false;
+		
 	} // responseCreationGroup ()
 
 	/**
@@ -122,29 +97,28 @@ public class ClientMaster implements talking {
 	 * @throws InterruptedException 
 	 */
 	public void Invitation(String nameGroup, int portClient) throws IOException, InterruptedException {
-		
-		byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation	
+		byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation we can use a key word as invitation !
 		byte[] receiveDtg = new byte[1024]; // answers from interested clients
 
 		DatagramPacket reception;
-		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, _portClient);
+		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _groupIp, _portClient);
 		// The client (bis) will stop the loop when he wants, so the discussion could begin
 		while (_loop) {
-			_socketEmission.send(toSend);
-			reception = new DatagramPacket(receiveDtg,receiveDtg.length);
-			if(_start){
+			_broadcastSocket.send(toSend);
+			reception = new DatagramPacket(receiveDtg, receiveDtg.length);
+			if(_start) { // Use byte array constant for stop
 				byte[] stop = new String("stop").getBytes();
-				toSend = new DatagramPacket(stop, stop.length, _ipGroup, _portClient);
-				_socketEmission.send(toSend);
+				toSend = new DatagramPacket(stop, stop.length, _groupIp, _portClient);
+				_broadcastSocket.send(toSend);
 				break;
 			}
-			_socketEmission.receive(reception);
-			System.out.println(reception.getAddress());
-			if (!_clientsAccepted.contains(reception.getAddress()))
-				_clientsAccepted.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
-				System.out.println("Client added");
+			_broadcastSocket.receive(reception);
+			System.out.println(reception.getAddress()); // DEBUG
+			// Les faire s'authentifier ICI avant d'accepter !!!
+			if (!_acceptedClients.contains(reception.getAddress()))
+				_acceptedClients.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
+			System.out.println("Client added"); // DEBUG
 		}
-		System.out.println("exit loop");
 		
 	} // Invitation ()
 	
@@ -154,60 +128,22 @@ public class ClientMaster implements talking {
 	 * @throws IOException
 	 */
 	public void creationGroupDiscussion () throws IOException {
-		DataOutputStream os = null; int i = 1; System.out.println(_clientsAccepted);
-		_sockOthers.add(new Socket(_clientsAccepted.get(0), _portClient)); // Problème sur cette ligne, n'arrive pas à construire la socket alors que _clientsAccepted est rempli
-		os = new DataOutputStream(_sockOthers.get(0).getOutputStream()); // clientMaster bound to first client
-		os.writeBytes(_clientsAccepted.get(i).getHostAddress() + '\n'); // next
-		os.writeBytes(_adressMaster.getHostAddress() + '\n'); // prev
-		os.close();
-		if (_clientsAccepted.size() > 1){
-			for (; i < _clientsAccepted.size() - 1; ++i){
-				_sockOthers.add(new Socket(_clientsAccepted.get(i), _portClient));
-				Socket tmp = _sockOthers.get(i);
-				os = new DataOutputStream(tmp.getOutputStream());
-				os.writeBytes(_clientsAccepted.get(i+1).getHostAddress() + '\n'); // next
-				os.writeBytes(_clientsAccepted.get(i-1).getHostAddress() + '\n'); // prev
-				os.close();
-			}
-		}
-		os = new DataOutputStream(_sockOthers.get(i).getOutputStream()); // last client bound to clientMaster
-		os.writeBytes(_adressMaster.getHostAddress() + '\n');
-		os.close();
-		_ipNext = _sockOthers.get(0).getInetAddress();
-		for (int j = 1; j < _clientsAccepted.size(); ++j){
-			_sockOthers.get(j).close(); // except the first client for the beginning of the ring
-		}
+		// Création d'une socket avec le premier ip de listAccepted (rajouter cette socket et les send/receive dans Client)
+		// Création d'une socket avec le dernier ip de listAccepted (rajouter cette socket et les send/receive dans Client)
+		// Envoyer à ce premier client listAccepted
+		
+		// Ou alors envoyer les bonnes ip au moment de start !!!
+		
 	} // creationGroupDiscussion()
-	
-	
-
-	// functions high level :
 	
 	public boolean is_start() {
 		return _start;
-	}
+		
+	} // is_start ()
 
-	public void set_start(boolean _start) {
-		this._start = _start;
-	}
+	public void set_start(boolean start) {
+		_start = start;
+		
+	} // set_start ()
 
-	@Override
-	public void sendMessagetoChat(String text) throws IOException {
-		assert(_sockOthers != null);
-		DataOutputStream outToClient = new DataOutputStream(_sockOthers.get(0).getOutputStream());
-		System.out.println("Preparation envoi");
-		outToClient.writeBytes(text + '\n');
-		System.out.println(text + " envoyé");
-	}
-
-	@Override
-	public String receiveMessageFromChat() throws IOException {
-		assert(_sockOthers != null);
-		BufferedReader bw = new BufferedReader(new InputStreamReader(_sockOthers.get(_sockOthers.size()-1).getInputStream()));
-		String rec = bw.readLine();
-		System.out.println("J'ai recu : " + rec);
-		return rec;
-	}
-
-	
-}
+} // ClientMaster

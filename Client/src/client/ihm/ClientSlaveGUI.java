@@ -9,15 +9,13 @@ public class ClientSlaveGUI extends JFrame {
 	private MainPanelSlave _clientSlaveMainPanel;
 
 	public ClientSlaveGUI () {
-		
 		_clientSlaveMainPanel = new MainPanelSlave();
 		add(_clientSlaveMainPanel);
 		setTitle("Participant discussion's group");
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		pack();
 		setVisible(true);
-		
-	}
+	} // ClientSlaveGUI ()
 	
 	/**
 	 * @param args
@@ -25,7 +23,6 @@ public class ClientSlaveGUI extends JFrame {
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
 		ClientSlaveGUI g = new ClientSlaveGUI();
+	} // main ()
 
-	}
-
-}
+} // ClientSlaveGUI

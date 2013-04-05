@@ -1,66 +1,53 @@
 package clientSlave;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 
-import clientSupreme.talking;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
-public class ClientSlave implements talking{
+import utils.Tools;
+
+import clientSupreme.Client;
+
+public class ClientSlave extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
-	private HashMap<InetAddress, String> _listGroups;
-	/** communication broadcast from client master */
-	private DatagramSocket _sockBroadcast;
-	/** Port of a client master (UDP) */
-	private int _portBis;
-	/** Port of a client */
-	private int _portClient;
-	/** communication between the client's neighboor and the client (ring) */
-	private Socket _sockNeighboor;
-	/** communication between the clients (slave) and the client master */
-	private Socket _sockClientBis;
-	
-	private InetAddress _ipNext;
-	
-	private InetAddress _ipGroup; // trial
-	private MulticastSocket _socketReception;
+	private HashMap<InetAddress, String> _listGroups; // on mettra plustot <ipCreateur, PseudoCreateur, NomGroupe>
 	
 	private volatile boolean _loop = true;
-	private InetAddress _ipPrev;
-	
 	
 	/**
 	 * Constructor
 	 */
-	public ClientSlave (){
-		_portBis	= 9300; // We considerate port 9300 for the clients Bis
-		_portClient = 9301;
-		_ipNext     = null;
+	public ClientSlave () {
 		try {
-			_ipGroup = InetAddress.getByName("239.255.80.84");
-			_socketReception = new MulticastSocket(_portClient);
-			_socketReception.joinGroup(_ipGroup);
+			// Vérification de l'existence d'une paire de clef
+			// Sauvegarde si necessaire (si un seul fichier est absent on régénère tout)
+			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
+				Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
+			
+			_groupIp = InetAddress.getByName("239.255.80.84");
+			_broadcastSocket = new MulticastSocket(_portClient);
+			_broadcastSocket.joinGroup(_groupIp);
 			_listGroups = new HashMap<InetAddress,String>();
-			//_sockBroadcast = new DatagramSocket(_portClient);
-		} catch (IOException e) {
+		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | InvalidKeySpecException e) {
 			e.printStackTrace();
 		}
 		
-	}
+	} // ClientSlave ()
 
 	/**
 	 * Allow a client to receive invitation then if the client wished this group, he sends an answer
@@ -73,25 +60,24 @@ public class ClientSlave implements talking{
 		DatagramPacket invitation, confirm;
 		while(_loop){
 			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
-			_socketReception.receive(invitation);
-			System.out.println("coucou");
+			_broadcastSocket.receive(invitation);
 			String grpInvitation = new String(invitation.getData(), 0, invitation.getLength());
-			System.out.println(grpInvitation);
-			System.out.println("ip : " + invitation.getAddress());
-			ack = _socketReception.getLocalAddress().getAddress();
+			System.out.println(grpInvitation); // DEBUG
+			System.out.println("ip : " + invitation.getAddress()); // DEBUG
+			ack = _broadcastSocket.getLocalAddress().getAddress();
 			confirm = new DatagramPacket(ack, ack.length, invitation.getAddress(), invitation.getPort());
-			_socketReception.send(confirm);
-			if (grpInvitation.equals("stop")){System.out.println("loopBeg");_loop=false;System.out.println("End");}
+			_broadcastSocket.send(confirm);
 			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(grpInvitation)))
 				_listGroups.put(invitation.getAddress(), grpInvitation);
+			if (grpInvitation.equals("stop")) // Donnée mebre byte array (on peut utiliser NOK ou une nouvelle
+				_loop = false;
 		}
+		
+		@SuppressWarnings("resource")
 		ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(new File("log.txt")));
 		os.writeObject(get_listGroups());
-		/*_sockBroadcast.receive(invitation);
-		System.out.println("coucou");
-		String grpInvitation = invitation.getData().toString();
-		_listGroups.put(invitation.getAddress(), grpInvitation);*/ // add the sender's ip (client bis) and group name
 		assert(_listGroups.size() > 0);
+		
 	} // receiveInvitation ()
 	
 	/**
@@ -102,29 +88,26 @@ public class ClientSlave implements talking{
 	 */
 	public void requestJoinGroup (String grp, InetAddress ipClientBis) throws IOException{
 		byte[] answer = new String("invitation true " + grp).getBytes();
+		@SuppressWarnings("resource")
 		DatagramSocket tmp = new DatagramSocket();
-		DatagramPacket confirm = new DatagramPacket(answer, answer.length, ipClientBis, _portBis);
+		DatagramPacket confirm = new DatagramPacket(answer, answer.length, ipClientBis, _portServer);
 		tmp.send(confirm);
+		
 	} // requestJoinGroup ()
 	
 	/**
 	 * Each client must use this function to bind itself with its neighboor for the creation of the ring
 	 * @param ipClientBis is the Address IP of the client master
 	 * @throws IOException
+	 * @throws ClassNotFoundException 
 	 */
-	public void linkNeighboor (InetAddress ipClientBis) throws IOException {
-		_sockClientBis = new Socket(ipClientBis, _portBis);
-		BufferedReader bw = new BufferedReader(new InputStreamReader(_sockClientBis.getInputStream()));
-		String ipNext = bw.readLine();
-		String ipPrev = bw.readLine();
-		bw.close();
-		_sockClientBis.close();
-		_ipNext = InetAddress.getByName(ipNext);
-		_ipPrev = InetAddress.getByName(ipPrev);
-		_sockNeighboor = new Socket(InetAddress.getByName(ipNext), _portClient); 
+	public void linkNeighboor (String ipClientBis) throws IOException, ClassNotFoundException {
+		// Receive list accepted
+		// Création d'une socket avec le premier ip de listAccepted (rajouter cette socket et les send/receive dans Client)
+		// Création d'une socket avec le dernier ip de listAccepted (rajouter cette socket et les send/receive dans Client)
+		// Envoyer à ce premier client listAccepted
+		
 	} // linkNeighboor ()
-
-	// Get(s) :
 	
 	/**
 	 * 
@@ -132,27 +115,7 @@ public class ClientSlave implements talking{
 	 */
 	public HashMap<InetAddress, String> get_listGroups() {
 		return _listGroups;
-	}
+		
+	} // get_listGroups ()
 
-	// functions high level :
-	
-	@Override
-	public void sendMessagetoChat(String text) throws IOException {
-		assert(_sockNeighboor != null);
-		DataOutputStream outToClient = new DataOutputStream(_sockNeighboor.getOutputStream());
-		System.out.println("Preparation envoi");
-		outToClient.write(text.getBytes());
-		System.out.println(text + " envoyé");
-	}
-
-	@Override
-	public String receiveMessageFromChat() throws IOException {
-		assert(_sockNeighboor != null);
-		Socket tmp = new Socket(_ipPrev, _portClient);
-		BufferedReader bw = new BufferedReader(new InputStreamReader(tmp.getInputStream()));
-		String rec = bw.readLine();
-		System.out.println("J'ai recu : " + rec);
-		return rec;
-	}
-
-}
+} // ClientSlave
