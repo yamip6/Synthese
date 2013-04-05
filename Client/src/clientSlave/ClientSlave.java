@@ -102,10 +102,6 @@ public class ClientSlave extends Client {
 	 * @throws ClassNotFoundException 
 	 */
 	public void linkNeighboor (String ipClientBis) throws IOException, ClassNotFoundException {
-		// Receive list accepted
-		// Création d'une socket avec le premier ip de listAccepted (rajouter cette socket et les send/receive dans Client)
-		// Création d'une socket avec le dernier ip de listAccepted (rajouter cette socket et les send/receive dans Client)
-		// Envoyer à ce premier client listAccepted
 		
 	} // linkNeighboor ()
 	

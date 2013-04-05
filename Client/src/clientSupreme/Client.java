@@ -6,6 +6,7 @@ import java.io.OutputStream;
 
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -17,6 +18,8 @@ public class Client {
 	protected Socket _clientSocket;
 	/** Connection socket for the ring */
 	protected Socket _socketNeighboor;
+	/** Listen socket of the server (receive from precedent node) */
+	private ServerSocket _listenSocket;
 	/** Connection port with server */
 	protected final int _portServer = 9300;
 	/** Connection port with client */
@@ -26,9 +29,9 @@ public class Client {
 	protected OutputStream _outServer;
 	/** Socket input stream with server */
 	protected InputStream _inServer;	
-	/** Socket output stream with other client */
+	/** Socket output stream with next other client (ring) */
 	protected OutputStream _outClient;
-	/** Socket input stream with other client */
+	/** Socket input stream with next other client (ring) */
 	protected InputStream _inClient;
 	
 	/** Group ip to receive broadcast invitation */
@@ -56,7 +59,7 @@ public class Client {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public Socket connectionServer(String host, int port) throws UnknownHostException, IOException {
+	public Socket connectionServer (String host, int port) throws UnknownHostException, IOException {
 		_clientSocket = new Socket(host, port);
 		_outServer = _clientSocket.getOutputStream();
 		_inServer = _clientSocket.getInputStream();
@@ -64,14 +67,29 @@ public class Client {
 		
 	} // connectionServer()
 	
+	public Socket connectionNeighboor (String ipNext, int port) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
+		_socketNeighboor = new Socket(ipNext, port);
+		_outClient = _socketNeighboor.getOutputStream();
+		_inClient = _socketNeighboor.getInputStream();
+		return _socketNeighboor;
+		
+	} // connectionServer()
+	
+	/** You have to call it when you build the ring */
+	public void startServerMode () throws IOException {
+		_listenSocket = new ServerSocket(_portClient); // parameter it and change it
+		_listenSocket.accept();
+		
+	} // startServer()
+	
 	/**
 	 * Close the socket which permits communication between server and client(s)
 	 * @throws IOException
 	 */
-	public void closeConnectionServer() throws IOException {
+	public void closeConnectionServer () throws IOException {
 		_clientSocket.close();
 		
-	} // closeConnectionServer()
+	} // closeConnectionServer ()
 	
 	/**
 	 * Method which permits to send byte array
@@ -82,7 +100,7 @@ public class Client {
 		_outServer.write(message);
 		_outServer.flush();
 		
-	} // send()
+	} // send ()
 
 	/**
 	 * Méthod which permits to receive byte array
@@ -96,6 +114,6 @@ public class Client {
 		_inServer.read(data); // Reading the inputstream
 		return data;
 		
-	} // receive()
+	} // receive ()
 	
 } // Client

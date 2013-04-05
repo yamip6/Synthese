@@ -4,17 +4,11 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import java.io.File;
 import java.io.IOException;
-
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import clientSupreme.Client;
 
@@ -46,7 +40,7 @@ public class ClientMaster extends Client {
 			_broadcastSocket = new MulticastSocket();
 			_broadcastSocket.joinGroup(_groupIp);
 			_acceptedClients = new ArrayList<InetAddress>();
-		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | InvalidKeySpecException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -81,8 +75,8 @@ public class ClientMaster extends Client {
 		    System.out.println("Response OK : " + new String(grpWished)); // DEBUG
 		    return true;
 		} else if(Arrays.equals(response, NOK)) {
-			/*byte[] size = receive(4);
-		    byte[] grpWished = receive(Utils.byteArrayToInt(size)); // + Raison Echec*/
+			byte[] size = receive(4);
+		    byte[] grpWished = receive(Utils.byteArrayToInt(size)); // + Raison Echec
 		    return false;
 		}
 		return false;
@@ -128,11 +122,7 @@ public class ClientMaster extends Client {
 	 * @throws IOException
 	 */
 	public void creationGroupDiscussion () throws IOException {
-		// Création d'une socket avec le premier ip de listAccepted (rajouter cette socket et les send/receive dans Client)
-		// Création d'une socket avec le dernier ip de listAccepted (rajouter cette socket et les send/receive dans Client)
-		// Envoyer à ce premier client listAccepted
-		
-		// Ou alors envoyer les bonnes ip au moment de start !!!
+
 		
 	} // creationGroupDiscussion()
 	

@@ -67,6 +67,7 @@ public class Server {
 	            send(size);
 	            send(grpName); // + Raison Echec*/
 			}
+			request = receive(2);
         }
 		
 	} // foo ()
