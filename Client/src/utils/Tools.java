@@ -23,8 +23,13 @@ import java.io.IOException;
 
 public class Tools {
 	/**
-	 * Méthode permettant de générer une paire de clef RSA
-	 * @param side : Côté pour lequel on veut générer cette paire de clef (client ou serveur)
+	 * Méthod which permits to generate a RSA key pair
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws IllegalBlockSizeException
+	 * @throws IOException
+	 * @throws InvalidKeySpecException
 	 */
 	public static void keyGenerator() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, IOException, InvalidKeySpecException {
 		// Génération de la pair de clefs
@@ -35,7 +40,7 @@ public class Tools {
 		// Génération d'une clef à partir d'une passphrase pour protéger la clé privée
 		byte[] secretKeySalt = new byte[16];
 		Crypto.randomFillBuffer(secretKeySalt);
-		SecretKey secretKey = Crypto.getKeyFromPBKDF("Entrez votre passphrase pour protéger votre clef privée : ", secretKeySalt);
+		SecretKey secretKey = Crypto.getKeyFromPBKDF("Enter a pass to protect your private key : ", secretKeySalt);
 
 		// Encapsulation de la clef privée
 		Cipher keyWrapper = Cipher.getInstance("AES");
