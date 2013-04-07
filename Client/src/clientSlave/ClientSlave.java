@@ -102,6 +102,10 @@ public class ClientSlave extends Client {
 	 * @throws ClassNotFoundException 
 	 */
 	public void linkNeighboor (String ipClientBis) throws IOException, ClassNotFoundException {
+		// Recevoir en multicast la liste des ips _acceptedClients
+		//String ipNeighboor = // Rechercher l'ip suivante de la mienne dans la liste reçue
+		//connectionNeighboor(ipNeighboor);
+		//startServerMode();
 		
 	} // linkNeighboor ()
 	

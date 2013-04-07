@@ -18,7 +18,7 @@ import utils.Utils;
 public class ClientMaster extends Client {
 
 	/** List of ip clients which accepted the invitation and are accepted to join the group */
-	private ArrayList<InetAddress> _acceptedClients;
+	private ArrayList<InetAddress> _acceptedClients; // Faudrait stocker dans une liste de string c'est mieux que ip
 	
 	private volatile boolean _start = false;
 	private volatile boolean _loop = true;
@@ -122,7 +122,10 @@ public class ClientMaster extends Client {
 	 * @throws IOException
 	 */
 	public void creationGroupDiscussion () throws IOException {
-
+		// envoyer en multicast la liste des ips _acceptedClients
+		String ipNeighboor = _acceptedClients.get(0).getHostAddress(); // Faudrait stocker dans une liste de string c'est mieux que ip
+		connectionNeighboor(ipNeighboor);
+		startServerMode();
 		
 	} // creationGroupDiscussion()
 	

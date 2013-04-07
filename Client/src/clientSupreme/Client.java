@@ -16,7 +16,7 @@ public class Client {
 	
 	/** Connection socket for client/server */
 	protected Socket _clientSocket;
-	/** Connection socket for the ring */
+	/** Connection socket with neighboor (for the ring) */
 	protected Socket _socketNeighboor;
 	/** Listen socket of the server (receive from precedent node) */
 	private ServerSocket _listenSocket;
@@ -67,27 +67,47 @@ public class Client {
 		
 	} // connectionServer()
 	
-	public Socket connectionNeighboor (String ipNext, int port) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
-		_socketNeighboor = new Socket(ipNext, port);
+	/**
+	 * Method which permits to connect client with his neighboor via socket
+	 * @param host : Connection neighboor IP
+	 * @param port : Connection port
+	 * @return Connection socket client/neighboor
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
+	public Socket connectionNeighboor (String ipNext/*, int port*/) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
+		_socketNeighboor = new Socket(ipNext, _portClient); // port needs to be parameter
 		_outClient = _socketNeighboor.getOutputStream();
 		_inClient = _socketNeighboor.getInputStream();
 		return _socketNeighboor;
 		
 	} // connectionServer()
 	
-	/** You have to call it when you build the ring */
-	public void startServerMode () throws IOException {
+	/**
+	 * Method which permits to receive message from precedent client in the ring
+	 * @throws IOException
+	 */
+	public void startServerMode (/*int port*/) throws IOException {
 		_listenSocket = new ServerSocket(_portClient); // parameter it and change it
 		_listenSocket.accept();
 		
 	} // startServer()
 	
 	/**
-	 * Close the socket which permits communication between server and client(s)
+	 * Close the socket which permits communication between server and client
 	 * @throws IOException
 	 */
 	public void closeConnectionServer () throws IOException {
 		_clientSocket.close();
+		
+	} // closeConnectionServer ()
+	
+	/**
+	 * Close the socket which permits communication between client and neighboor
+	 * @throws IOException
+	 */
+	public void closeConnectionNeighboor () throws IOException {
+		_socketNeighboor.close();
 		
 	} // closeConnectionServer ()
 	
