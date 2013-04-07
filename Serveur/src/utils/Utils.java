@@ -1,5 +1,15 @@
 package utils;
 
+import java.io.BufferedReader;
+import java.io.Console;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+
 public class Utils {
 	/**
 	 * 
@@ -65,5 +75,30 @@ public class Utils {
 		return c;
 		
 	} // concatenateByteArray()	
+	
+	public static void saveBuffer(byte[] buffer, File file) throws IOException {
+		OutputStream os = new FileOutputStream(file);
+		os.write(buffer);
+		os.close();
+	} // saveBuffer()
+	
+	public static byte[] readBuffer(File file) throws IOException {
+		InputStream is = new FileInputStream(file);
+		byte result[] = new byte[(int) file.length()];
+		is.read(result);
+		is.close();
+		return result;	
+	} // readBuffer()
+	
+	public static char[] readPassword(String message) throws IOException {
+		Console con = System.console();
+		if (con != null)
+			return con.readPassword(message);
+		else {
+			System.out.println(message);
+			return new BufferedReader(new InputStreamReader(System.in)).readLine().toCharArray();
+		}
+		
+	} // readPassword()
 	
 } // ManipString
