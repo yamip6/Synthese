@@ -76,7 +76,7 @@ public class Client {
 	 * @throws IOException
 	 */
 	public Socket connectionNeighboor (String ipNext/*, int port*/) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
-		_socketNeighboor = new Socket(ipNext, _portClient); // port needs to be parameter
+		_socketNeighboor = new Socket(ipNext, 9999); // port needs to be parameter, 9999?
 		_outClient = _socketNeighboor.getOutputStream();
 		_inClient = _socketNeighboor.getInputStream();
 		return _socketNeighboor;
@@ -88,7 +88,7 @@ public class Client {
 	 * @throws IOException
 	 */
 	public void startServerMode (/*int port*/) throws IOException {
-		_listenSocket = new ServerSocket(_portClient); // parameter it and change it
+		_listenSocket = new ServerSocket(9999); // parameter it and change it. Je propose port 9999
 		_listenSocket.accept();
 		
 	} // startServerMode()

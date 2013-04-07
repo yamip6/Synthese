@@ -4,6 +4,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.Socket;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,12 +14,14 @@ import java.io.ObjectOutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 import utils.Tools;
+import utils.Utils;
 
 import clientSupreme.Client;
 
@@ -26,6 +29,10 @@ public class ClientSlave extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<InetAddress, String> _listGroups; // on mettra plustot <ipCreateur, PseudoCreateur, NomGroupe>
+	
+	private InetAddress _groupIpR;
+	private MulticastSocket _broadcastSocketR;
+	private Socket          _sockClient;
 	
 	private volatile boolean _loop = true;
 	
@@ -42,6 +49,8 @@ public class ClientSlave extends Client {
 			_groupIp = InetAddress.getByName("239.255.80.84");
 			_broadcastSocket = new MulticastSocket(_portClient);
 			_broadcastSocket.joinGroup(_groupIp);
+			_groupIpR = InetAddress.getByName("239.255.80.85");
+			_broadcastSocketR = new MulticastSocket(9999);
 			_listGroups = new HashMap<InetAddress,String>();
 		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | InvalidKeySpecException e) {
 			e.printStackTrace();
@@ -98,15 +107,30 @@ public class ClientSlave extends Client {
 	/**
 	 * Each client must use this function to bind itself with its neighboor for the creation of the ring
 	 * @param ipClientBis is the Address IP of the client master
-	 * @throws IOException
-	 * @throws ClassNotFoundException 
+	 * @throws Exception 
 	 */
-	public void linkNeighboor (String ipClientBis) throws IOException, ClassNotFoundException {
-		// Recevoir en multicast la liste des ips _acceptedClients
-		//String ipNeighboor = // Rechercher l'ip suivante de la mienne dans la liste reçue
-		//connectionNeighboor(ipNeighboor);
-		//startServerMode();
+	public void linkNeighboor (String ipClientBis) throws Exception {
+		byte[] receiveDtg = new byte[1024];
+		DatagramPacket pck = new DatagramPacket(receiveDtg, receiveDtg.length);
+		_broadcastSocketR.joinGroup(_groupIpR);
+		_broadcastSocketR.receive(pck);
+		ArrayList<String> listIps = Utils.arrayByteToList(receiveDtg);
 		
+		// The client searchs its ip to determinate the ip following its own ip :
+		if(listIps.contains(InetAddress.getLocalHost())){
+			int pos = listIps.indexOf(InetAddress.getLocalHost());
+			/*if (pos == listIps.size()-1){
+				_sockClient = new Socket(listIps.get(0), 9999);   Ne devrait jamais passer par là car déja relié
+			}													En effet, la dernière ip = le client Master
+			else */
+			connectionNeighboor(listIps.get(pos+1));
+			System.out.println("Two clients linked !!!");  // DEBUG
+		}
+		else {
+			throw new Exception("Ip doesn't exist in the list of accepted clients...");
+		}
+		
+		startServerMode();
 	} // linkNeighboor ()
 	
 	/**

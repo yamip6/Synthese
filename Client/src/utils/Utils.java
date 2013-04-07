@@ -1,7 +1,11 @@
 package utils;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Console;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -9,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 public class Utils {
 	/**
@@ -75,6 +80,32 @@ public class Utils {
 		return c;
 		
 	} // concatenateByteArray()	
+	
+	/**
+	 * This function changes an arrayList of String to an array of bytes
+	 * @param l
+	 * @return array of bytes
+	 * @throws IOException
+	 */
+	public static byte[] arrayListToByte(ArrayList<String> l) throws IOException{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream(baos);
+		for (String element : l) {
+		    out.writeUTF(element);
+		}
+		return baos.toByteArray();
+	} // arrayListToByte()
+	
+	public static ArrayList<String> arrayByteToList (byte[] l) throws IOException {
+		ByteArrayInputStream bais = new ByteArrayInputStream(l);
+		DataInputStream in = new DataInputStream(bais);
+		ArrayList<String> out = new ArrayList<String>();
+		while (in.available() > 0) {
+		    String element = in.readUTF();
+		    out.add(element);
+		}
+		return out;
+	} // arrayByteToList ()
 	
 	public static void saveBuffer(byte[] buffer, File file) throws IOException {
 		OutputStream os = new FileOutputStream(file);

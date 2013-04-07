@@ -18,7 +18,9 @@ import utils.Utils;
 public class ClientMaster extends Client {
 
 	/** List of ip clients which accepted the invitation and are accepted to join the group */
-	private ArrayList<InetAddress> _acceptedClients; // Faudrait stocker dans une liste de string c'est mieux que ip
+	private ArrayList<String> _acceptedClients; 
+	private MulticastSocket _broadcastSocketRing;
+	private InetAddress _groupIpRing;
 	
 	private volatile boolean _start = false;
 	private volatile boolean _loop = true;
@@ -37,9 +39,11 @@ public class ClientMaster extends Client {
 						
 			connectionServer(adressServer, port);
 			_groupIp = InetAddress.getByName("239.255.80.84"); // A voir
+			_groupIpRing = InetAddress.getByName("239.255.80.85");
 			_broadcastSocket = new MulticastSocket();
 			_broadcastSocket.joinGroup(_groupIp);
-			_acceptedClients = new ArrayList<InetAddress>();
+			_broadcastSocketRing = new MulticastSocket();
+			_acceptedClients = new ArrayList<String>();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -109,8 +113,8 @@ public class ClientMaster extends Client {
 			_broadcastSocket.receive(reception);
 			System.out.println(reception.getAddress()); // DEBUG
 			// Les faire s'authentifier ICI avant d'accepter !!!
-			if (!_acceptedClients.contains(reception.getAddress()))
-				_acceptedClients.add(reception.getAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
+			if (!_acceptedClients.contains(reception.getAddress().getHostAddress()))   
+				_acceptedClients.add(reception.getAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
 			System.out.println("Client added"); // DEBUG
 		}
 		
@@ -123,8 +127,19 @@ public class ClientMaster extends Client {
 	 */
 	public void creationGroupDiscussion () throws IOException {
 		// envoyer en multicast la liste des ips _acceptedClients
-		String ipNeighboor = _acceptedClients.get(0).getHostAddress(); // Faudrait stocker dans une liste de string c'est mieux que ip
+	
+		// Le dernier client accepté n'est autre que le client master lui-même :
+		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
+		
+		byte[] toSend = Utils.arrayListToByte(_acceptedClients);
+		
+		String ipNeighboor = _acceptedClients.get(0);
 		connectionNeighboor(ipNeighboor);
+
+		_broadcastSocketRing.joinGroup(_groupIpRing);
+		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _groupIpRing, 9999); // portClient à changer ? 9999 ?
+		_broadcastSocketRing.send(pck);
+		
 		startServerMode();
 		
 	} // creationGroupDiscussion()
