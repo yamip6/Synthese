@@ -81,7 +81,7 @@ public class Client {
 		_inClient = _socketNeighboor.getInputStream();
 		return _socketNeighboor;
 		
-	} // connectionServer()
+	} // connectionNeighboor()
 	
 	/**
 	 * Method which permits to receive message from precedent client in the ring
@@ -91,7 +91,7 @@ public class Client {
 		_listenSocket = new ServerSocket(_portClient); // parameter it and change it
 		_listenSocket.accept();
 		
-	} // startServer()
+	} // startServerMode()
 	
 	/**
 	 * Close the socket which permits communication between server and client
@@ -109,7 +109,7 @@ public class Client {
 	public void closeConnectionNeighboor () throws IOException {
 		_socketNeighboor.close();
 		
-	} // closeConnectionServer ()
+	} // closeConnectionNeighboor ()
 	
 	/**
 	 * Method which permits to send byte array

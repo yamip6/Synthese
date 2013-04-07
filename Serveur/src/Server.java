@@ -50,7 +50,7 @@ public class Server {
 	} // startServer()
 	
 	
-	public void foo () throws IOException, ClassNotFoundException {
+	public void service () throws IOException, ClassNotFoundException {
 		while(true)
         {
 			byte[] request = receive(2);
@@ -67,10 +67,9 @@ public class Server {
 	            send(size);
 	            send(grpName); // + Raison Echec*/
 			}
-			request = receive(2);
         }
 		
-	} // foo ()
+	} // service ()
 	
 	public void disconnection () throws IOException {
 		// Closing the sockets
@@ -111,7 +110,7 @@ public class Server {
 		System.out.println("SERVER : "); // DEBUG
 		Server s = new Server();
 		try {
-			s.foo();
+			s.service();
 			s.disconnection();
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
