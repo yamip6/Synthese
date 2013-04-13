@@ -79,6 +79,7 @@ public class Client {
 	 * @throws IOException
 	 */
 	public Socket connectionNeighboor (String ipNext/*, int port*/) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
+		System.out.println("WAZZZA : " + ipNext);
 		_socketNeighboor = new Socket(ipNext, 9999); // port needs to be parameter, 9999?
 		_outClient = _socketNeighboor.getOutputStream();
 		_inClient = _socketNeighboor.getInputStream();

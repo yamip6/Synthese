@@ -250,15 +250,18 @@ public class ClientMaster extends Client {
 	 * @throws IOException
 	 */
 	public void creationGroupDiscussion () throws IOException {
+		System.out.println("Welcome Gentlemans");
+		System.out.println(InetAddress.getLocalHost().getHostAddress());
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
 		byte[] toSend = Utils.arrayListToByte(_acceptedClients);
 		_broadcastSocketRing.joinGroup(_groupIpRing);
 		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _groupIpRing, 9999); // portClient à changer ? 9999 ?
 		_broadcastSocketRing.send(pck);
-		
+		System.out.println("Glou GLou ");
 		String ipNeighboor = _acceptedClients.get(0);
-		connectionNeighboor(ipNeighboor);
-		
+		System.out.println("Glou GLou IP : " + _acceptedClients.get(0));
+		connectionNeighboor("192.168.0.13"/*ipNeighboor*/);
+		System.out.println("Je suis vénére comme Pascal !");
 		startServerMode();
 		
 	} // creationGroupDiscussion()
