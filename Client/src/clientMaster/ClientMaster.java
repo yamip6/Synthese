@@ -250,19 +250,14 @@ public class ClientMaster extends Client {
 	 * @throws IOException
 	 */
 	public void creationGroupDiscussion () throws IOException {
-		// envoyer en multicast la liste des ips _acceptedClients
-	
-		// Le dernier client accepté n'est autre que le client master lui-même :
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
-		
 		byte[] toSend = Utils.arrayListToByte(_acceptedClients);
-		
-		String ipNeighboor = _acceptedClients.get(0);
-		connectionNeighboor(ipNeighboor);
-
 		_broadcastSocketRing.joinGroup(_groupIpRing);
 		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _groupIpRing, 9999); // portClient à changer ? 9999 ?
 		_broadcastSocketRing.send(pck);
+		
+		String ipNeighboor = _acceptedClients.get(0);
+		connectionNeighboor(ipNeighboor);
 		
 		startServerMode();
 		

@@ -32,7 +32,7 @@ public class ClientSlave extends Client {
 	
 	private InetAddress _groupIpR;
 	private MulticastSocket _broadcastSocketR;
-	private Socket          _sockClient;
+	private Socket _sockClient;
 	
 	private volatile boolean _loop = true;
 	
@@ -119,10 +119,6 @@ public class ClientSlave extends Client {
 		// The client searchs its ip to determinate the ip following its own ip :
 		if(listIps.contains(InetAddress.getLocalHost())){
 			int pos = listIps.indexOf(InetAddress.getLocalHost());
-			/*if (pos == listIps.size()-1){
-				_sockClient = new Socket(listIps.get(0), 9999);   Ne devrait jamais passer par là car déja relié
-			}													En effet, la dernière ip = le client Master
-			else */
 			connectionNeighboor(listIps.get(pos+1));
 			System.out.println("Two clients linked !!!");  // DEBUG
 		}

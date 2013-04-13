@@ -82,9 +82,9 @@ public class Server {
 				size = receive(4);
 				byte[] signature = receive(Utils.byteArrayToInt(size));
 				boolean result = Tools.verifSign(Tools.concatenateByteArray(username, grpName), _publicKey, signature);
-				if(result /*&& pas dans la liste*/) { // Et test authentification
-					// Ajout dans la liste
-					send(OK);
+				if(result && !_groupList.contains(new String(grpName))) { // Et test authentification
+					_groupList.add(new String(grpName));
+					send(OK); // On chiffre la réponse avec le mot de passe de la bdd, si lz client arrive a déchiffrer c'est qu'il s'est authentifier
 		            send(Utils.intToByteArray(grpName.length, 4));
 		            send(grpName); // Pas de controle d'intégrité
 				} else {
