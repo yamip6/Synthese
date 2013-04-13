@@ -41,7 +41,7 @@ public class ClientMaster extends Client {
 				Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
 						
             _username = username;
-			connectionServer(adressServer, _port);
+			connectionServer(adressServer, port);
 			_groupIp = InetAddress.getByName("239.255.80.84"); // A voir
 			_groupIpRing = InetAddress.getByName("239.255.80.85");
 			_broadcastSocket = new MulticastSocket();
@@ -257,7 +257,7 @@ public class ClientMaster extends Client {
 		_broadcastSocketRing.send(pck);
 		
 		String ipNeighboor = _acceptedClients.get(0);
-		connectionNeighboor(ipNeighboor, _port);
+		connectionNeighboor("192.168.0.13", _port);
 		
 		startServerMode(_port);
 		
