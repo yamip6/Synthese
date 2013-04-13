@@ -3,8 +3,6 @@ package client.controller;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import java.io.IOException;
-
 import clientSlave.ClientSlave;
 
 public class JoinGroup implements ActionListener {

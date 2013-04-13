@@ -4,7 +4,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.Socket;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,7 +31,6 @@ public class ClientSlave extends Client {
 	
 	private InetAddress _groupIpR;
 	private MulticastSocket _broadcastSocketR;
-	private Socket _sockClient;
 	
 	private volatile boolean _loop = true;
 	
@@ -47,7 +45,7 @@ public class ClientSlave extends Client {
 				Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
 			
 			_groupIp = InetAddress.getByName("239.255.80.84");
-			_broadcastSocket = new MulticastSocket(_port);
+			_broadcastSocket = new MulticastSocket(9999);
 			_broadcastSocket.joinGroup(_groupIp);
 			_groupIpR = InetAddress.getByName("239.255.80.85");
 			_broadcastSocketR = new MulticastSocket(9999);
