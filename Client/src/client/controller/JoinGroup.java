@@ -20,7 +20,7 @@ public class JoinGroup implements ActionListener {
 		try {
 			_slave.receiveInvitation();
 			//slave.requestJoinGroup("toto", InetAddress.getByName("192.168.1.107"));
-			_slave.linkNeighboor(/*"192.168.1.109"*/"127.0.0.1");
+			_slave.linkNeighboor("192.168.0.15");
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}	

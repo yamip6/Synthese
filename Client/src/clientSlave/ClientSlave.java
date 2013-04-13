@@ -115,10 +115,10 @@ public class ClientSlave extends Client {
 		_broadcastSocketR.joinGroup(_groupIpR);
 		_broadcastSocketR.receive(pck);
 		ArrayList<String> listIps = Utils.arrayByteToList(receiveDtg);
-		
+		int pos;
+		pos = (listIps.indexOf(InetAddress.getLocalHost()));
 		// The client searchs its ip to determinate the ip following its own ip :
-		if(listIps.contains(InetAddress.getLocalHost())){
-			int pos = listIps.indexOf(InetAddress.getLocalHost());
+		if((pos = (listIps.indexOf(InetAddress.getLocalHost()))) > -1){
 			connectionNeighboor(listIps.get(pos+1));
 			System.out.println("Two clients linked !!!");  // DEBUG
 		}
