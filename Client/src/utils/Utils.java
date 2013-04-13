@@ -1,5 +1,8 @@
 package utils;
 
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,6 +17,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import client.ihm.InviteKeyGenerator;
 
 public class Utils {
 	/**
@@ -122,6 +133,7 @@ public class Utils {
 	} // readBuffer()
 	
 	public static char[] readPassword(String message) throws IOException {
+
 		Console con = System.console();
 		if (con != null)
 			return con.readPassword(message);

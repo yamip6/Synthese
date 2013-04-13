@@ -106,7 +106,7 @@ public class ClientMaster extends Client {
 		// Hashage MD5 de le clef publique
 		byte[] hash = Tools.hashFile("keys/public.key");
 		// Envoie du hash
-		System.out.println("Envoie de l'empreinte de la clef publique : " + Utils.byteArrayToHexString(hash)); // DEBUG
+		System.out.println("Envoi de l'empreinte de la clef publique : " + Utils.byteArrayToHexString(hash)); // DEBUG
 		send(Utils.intToByteArray(hash.length, 1));
 		send(hash);
 
@@ -123,7 +123,7 @@ public class ClientMaster extends Client {
 			System.out.println("Réception du challenge (réception NOK)."); // DEBUG
 
 			// Envoie de la clef publique et de la signature clef publique/challenge
-			System.out.println("Envoie de la clef publique/signature."); // DEBUG
+			System.out.println("Envoi de la clef publique/signature."); // DEBUG
 			byte[] pubKey = _keyPair.getPublic().getEncoded();
 			send(Utils.intToByteArray(pubKey.length, 4));
 			send(pubKey);
@@ -190,7 +190,7 @@ public class ClientMaster extends Client {
 		    	System.out.println("La vérification a réussie."); //DEBUG
 		    	
 		    	// Envoie du hash
-		    	System.out.println("Envoie du hash."); // DEBUG
+		    	System.out.println("Envoi du hash."); // DEBUG
 		    	byte[] empreinte = Tools.hash(_publicKey);
 		    	send(Utils.intToByteArray(empreinte.length, 1));
 		    	send(empreinte);

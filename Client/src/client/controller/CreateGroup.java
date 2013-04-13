@@ -14,6 +14,8 @@ public class CreateGroup implements ActionListener {
 	
 	private ClientMaster _master;
 	private String _adressServer;
+	private String _username;
+	private String _nameGroup;
 	private int _portServer;
 	private MainPanel _mainPanel;
 	
@@ -25,6 +27,8 @@ public class CreateGroup implements ActionListener {
 		String ip = _mainPanel.get_ip().getText();
 		_adressServer = ip;
 		String portS = _mainPanel.get_port().getText();
+		_username = _mainPanel.get_username().getText();
+		_nameGroup = _mainPanel.get_nameGroup().getText();
 		int port;
 		try {
 			port = Integer.parseInt(portS);
@@ -33,9 +37,9 @@ public class CreateGroup implements ActionListener {
 		catch (NumberFormatException e){
 			e.printStackTrace();
 		}
-		_master = new ClientMaster(_adressServer, _portServer, "Yassine");
+		_master = new ClientMaster(_adressServer, _portServer, _username);
 		try {
-			_master.requestCreationGroup("toto"); // Test
+			_master.requestCreationGroup(_nameGroup); 
 			_master.responseCreationGroup();
 			invitation();
 		} catch (IOException | ClassNotFoundException e) {
