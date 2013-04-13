@@ -21,7 +21,7 @@ public class CreateGroup implements ActionListener {
 		_mainPanel = panel;
 	} // CreateGroup()
 	
-	private void create () {
+	private void create () throws Exception {
 		String ip = _mainPanel.get_ip().getText();
 		_adressServer = ip;
 		String portS = _mainPanel.get_port().getText();
@@ -33,7 +33,7 @@ public class CreateGroup implements ActionListener {
 		catch (NumberFormatException e){
 			e.printStackTrace();
 		}
-		_master = new ClientMaster(_adressServer, _portServer);
+		_master = new ClientMaster(_adressServer, _portServer, "Yassine");
 		try {
 			_master.requestCreationGroup("toto"); // Test
 			_master.responseCreationGroup();
@@ -81,7 +81,11 @@ public class CreateGroup implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		create();
+		try {
+			create();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
 	} // actionPerformed ()
 
 } // CreateGroup

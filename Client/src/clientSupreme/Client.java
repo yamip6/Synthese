@@ -14,6 +14,9 @@ import java.security.KeyPair;
 
 public class Client {
 	
+	/** Client's username */
+	protected String _username;
+	
 	/** Connection socket for client/server */
 	protected Socket _clientSocket;
 	/** Connection socket with neighboor (for the ring) */
