@@ -47,7 +47,7 @@ public class ClientSlave extends Client {
 				Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
 			
 			_groupIp = InetAddress.getByName("239.255.80.84");
-			_broadcastSocket = new MulticastSocket(_portClient);
+			_broadcastSocket = new MulticastSocket(_port);
 			_broadcastSocket.joinGroup(_groupIp);
 			_groupIpR = InetAddress.getByName("239.255.80.85");
 			_broadcastSocketR = new MulticastSocket(9999);
@@ -99,7 +99,7 @@ public class ClientSlave extends Client {
 		byte[] answer = new String("invitation true " + grp).getBytes();
 		@SuppressWarnings("resource")
 		DatagramSocket tmp = new DatagramSocket();
-		DatagramPacket confirm = new DatagramPacket(answer, answer.length, ipClientBis, _portServer);
+		DatagramPacket confirm = new DatagramPacket(answer, answer.length, ipClientBis, 9999);
 		tmp.send(confirm);
 		
 	} // requestJoinGroup ()
@@ -119,14 +119,14 @@ public class ClientSlave extends Client {
 		pos = (listIps.indexOf(InetAddress.getLocalHost()));
 		// The client searchs its ip to determinate the ip following its own ip :
 		if((pos = (listIps.indexOf(InetAddress.getLocalHost()))) > -1){
-			connectionNeighboor(listIps.get(pos+1));
+			connectionNeighboor(listIps.get(pos+1), _port);
 			System.out.println("Two clients linked !!!");  // DEBUG
 		}
 		else {
 			throw new Exception("Ip doesn't exist in the list of accepted clients...");
 		}
 		
-		startServerMode();
+		startServerMode(_port);
 	} // linkNeighboor ()
 	
 	/**

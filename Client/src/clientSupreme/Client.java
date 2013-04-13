@@ -23,10 +23,8 @@ public class Client {
 	protected Socket _socketNeighboor;
 	/** Listen socket of the server (receive from precedent node) */
 	private ServerSocket _listenSocket;
-	/** Connection port with server */
-	protected final int _portServer = 9300;
 	/** Connection port with client */
-	protected final int _portClient = 9301;
+	protected final int _port = 9301;
 
 	/** Socket output stream with server */
 	protected OutputStream _outServer;
@@ -78,9 +76,8 @@ public class Client {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public Socket connectionNeighboor (String ipNext/*, int port*/) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
-		System.out.println("WAZZZA : " + ipNext);
-		_socketNeighboor = new Socket(ipNext, 9999); // port needs to be parameter, 9999?
+	public Socket connectionNeighboor (String ipNext, int port) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
+		_socketNeighboor = new Socket(ipNext, port);
 		_outClient = _socketNeighboor.getOutputStream();
 		_inClient = _socketNeighboor.getInputStream();
 		return _socketNeighboor;
@@ -91,8 +88,8 @@ public class Client {
 	 * Method which permits to receive message from precedent client in the ring
 	 * @throws IOException
 	 */
-	public void startServerMode (/*int port*/) throws IOException {
-		_listenSocket = new ServerSocket(9999); // parameter it and change it. Je propose port 9999
+	public void startServerMode (int port) throws IOException {
+		_listenSocket = new ServerSocket(port);
 		_listenSocket.accept();
 		
 	} // startServerMode()

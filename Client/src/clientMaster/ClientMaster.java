@@ -41,7 +41,7 @@ public class ClientMaster extends Client {
 				Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
 						
             _username = username;
-			connectionServer(adressServer, port);
+			connectionServer(adressServer, _port);
 			_groupIp = InetAddress.getByName("239.255.80.84"); // A voir
 			_groupIpRing = InetAddress.getByName("239.255.80.85");
 			_broadcastSocket = new MulticastSocket();
@@ -223,14 +223,14 @@ public class ClientMaster extends Client {
 		byte[] receiveDtg = new byte[1024]; // answers from interested clients
 
 		DatagramPacket reception;
-		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _groupIp, _portClient);
+		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _groupIp, 9999);
 		// The client (bis) will stop the loop when he wants, so the discussion could begin
 		while (_loop) {
 			_broadcastSocket.send(toSend);
 			reception = new DatagramPacket(receiveDtg, receiveDtg.length);
 			if(_start) { // Use byte array constant for stop
 				byte[] stop = new String("stop").getBytes();
-				toSend = new DatagramPacket(stop, stop.length, _groupIp, _portClient);
+				toSend = new DatagramPacket(stop, stop.length, _groupIp, 9999);
 				_broadcastSocket.send(toSend);
 				break;
 			}
@@ -250,19 +250,16 @@ public class ClientMaster extends Client {
 	 * @throws IOException
 	 */
 	public void creationGroupDiscussion () throws IOException {
-		System.out.println("Welcome Gentlemans");
-		System.out.println(InetAddress.getLocalHost().getHostAddress());
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
 		byte[] toSend = Utils.arrayListToByte(_acceptedClients);
 		_broadcastSocketRing.joinGroup(_groupIpRing);
-		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _groupIpRing, 9999); // portClient à changer ? 9999 ?
+		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _groupIpRing, _port);
 		_broadcastSocketRing.send(pck);
-		System.out.println("Glou GLou ");
+		
 		String ipNeighboor = _acceptedClients.get(0);
-		System.out.println("Glou GLou IP : " + _acceptedClients.get(0));
-		connectionNeighboor("192.168.0.13"/*ipNeighboor*/);
-		System.out.println("Je suis vénére comme Pascal !");
-		startServerMode();
+		connectionNeighboor(ipNeighboor, _port);
+		
+		startServerMode(_port);
 		
 	} // creationGroupDiscussion()
 	
