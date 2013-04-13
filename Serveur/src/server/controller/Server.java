@@ -1,3 +1,4 @@
+package server.controller;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,14 +39,14 @@ public class Server {
 	/** Constant of creation group */
 	public final byte[] CREATION = new byte[]{0x2f, 0x00};
 	
-	public Server (){
+	public Server (int port){
 		try {
 			_groupList = new ArrayList<String>();
 			// Vérification de l'existence d'une paire de clef
 			// Sauvegarde si necessaire (si un seul fichier est absent on régénère tout)
 				if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
 					Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
-			startServer(50000); // Port à paramétrer dans le GUI
+			startServer(port); // Port à paramétrer dans le GUI
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -244,19 +245,5 @@ public class Server {
 		
 	} // receive()
 	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		System.out.println("SERVER : "); // DEBUG
-		Server s = new Server();
-		try {
-			s.service();
-			s.disconnection();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-	} // main ()
 
 } // Server
