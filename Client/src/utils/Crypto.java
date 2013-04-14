@@ -1,7 +1,3 @@
-/**
- * Classe définissant les utilitaires cryptographique de base de l'application.
- */
-
 package utils;
 
 import java.security.InvalidKeyException;
@@ -26,22 +22,55 @@ import java.io.File;
 import java.io.IOException;
 
 public class Crypto {
+	
+	/**
+	 * 
+	 * @param buffer
+	 * @throws NoSuchAlgorithmException
+	 */
 	public static void randomFillBuffer(byte[] buffer) throws NoSuchAlgorithmException {
 		SecureRandom inst = SecureRandom.getInstance("SHA1PRNG");
 		inst.nextBytes(buffer);
+		
 	} // randomFillBuffer()
 
+	/**
+	 * 
+	 * @param algorithm
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 */
 	public static KeyPair generateKeyPair(String algorithm) throws NoSuchAlgorithmException {
 		KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm);
 		return generator.generateKeyPair();
+		
 	} // generateKeyPair()
 
-	/** Generate an AES key from a password */
+	/**
+	 * Method which generate an AES key from a password
+	 * @param message
+	 * @param salt
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeySpecException
+	 * @throws IOException
+	 */
 	public static SecretKey getKeyFromPBKDF(String message, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
 		return getKeyFromPBKDF(message, salt, 1000, 128);
+		
 	} // getKeyFromPBKDF()
 
-	/** Generate an AES key from a password */
+	/**
+	 * Method which generate an AES key from a password
+	 * @param message
+	 * @param salt
+	 * @param iterationCount
+	 * @param keyLength
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeySpecException
+	 * @throws IOException
+	 */
 	public static SecretKey getKeyFromPBKDF(String message, byte[] salt, int iterationCount, int keyLength) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
 		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WITHHMACSHA1");
 		char[] password = Utils.readPassword(message);
@@ -50,29 +79,54 @@ public class Crypto {
 			password[i] = 0;
 		
 		return new SecretKeySpec(factory.generateSecret(keySpec).getEncoded(), "AES");
+		
 	} // getKeyFromPBKDF()
 
+	/**
+	 * 
+	 * @param priv
+	 * @param salt
+	 * @param pub
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeySpecException
+	 * @throws IOException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 */
 	public static KeyPair loadKeyPair(File priv, File salt, File pub) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException {
 		KeyFactory factory = KeyFactory.getInstance("RSA");
 
-		// Chargement de la clé publique
+		// Loading the public key
 		PublicKey pubKey = factory.generatePublic(new X509EncodedKeySpec(Utils.readBuffer(pub)));
 	
-		// Chargement de la clé privée
+		// Loading the private key
 		byte[] wrappedPrivateKey = Utils.readBuffer(priv);
 		byte[] secretKeySalt = Utils.readBuffer(salt);
-		SecretKey secretKey = Crypto.getKeyFromPBKDF("Entrez votre passphrase de clef privée :", secretKeySalt);
+		SecretKey secretKey = Crypto.getKeyFromPBKDF("Enter your private key passphrase:", secretKeySalt);
 		Cipher keyWrapper = Cipher.getInstance("AES");
 		keyWrapper.init(Cipher.UNWRAP_MODE, secretKey);
 		PrivateKey privKey = (PrivateKey) keyWrapper.unwrap(wrappedPrivateKey, "RSA", Cipher.PRIVATE_KEY);
 		return new KeyPair(pubKey, privKey);
+		
 	} // loadKeyPair()
 	
+	/**
+	 * 
+	 * @param pub
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeySpecException
+	 * @throws IOException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 */
 	public static PublicKey loadPubKey(File pub) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException {
 		KeyFactory factory = KeyFactory.getInstance("RSA");
 
-		// Chargement de la clé publique
+		// Loading the public key
 		return factory.generatePublic(new X509EncodedKeySpec(Utils.readBuffer(pub)));
-	} // loadKeyPair()
+		
+	} // loadPubKey()
 	
 } // Crypto

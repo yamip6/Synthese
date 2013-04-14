@@ -1,14 +1,14 @@
-package clientSupreme;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+package client;
 
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import java.security.KeyPair;
 
@@ -23,6 +23,8 @@ public class Client {
 	protected Socket _socketNeighboor;
 	/** Listen socket of the server (receive from precedent node) */
 	private ServerSocket _listenSocket;
+	/** Connection socket with precedent client*/
+	private Socket _precSocket;
 	/** Connection port with client */
 	protected final int _port = 9301;
 
@@ -32,11 +34,11 @@ public class Client {
 	protected InputStream _inServer;	
 	/** Socket output stream with next other client (ring) */
 	protected OutputStream _outClient;
-	/** Socket input stream with next other client (ring) */
+	/** Socket input stream with precedent other client (ring) */
 	protected InputStream _inClient;
 	
-	/** Group ip to receive broadcast invitation */
-	protected InetAddress _groupIp; // trial, his value is written in the source code => the clientMaster and the clients may choose one ? We'll see.
+	/** Group ip to receive broadcast invitation/discussion */
+	protected InetAddress _ipGroup; // trial, his value is written in the source code => the clientMaster and the clients may choose one ? We'll see.
 	/** Broadcast socket for sending invitation to join group */
 	protected MulticastSocket _broadcastSocket;
 	
@@ -60,7 +62,7 @@ public class Client {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public Socket connectionServer (String host, int port) throws UnknownHostException, IOException {
+	public Socket connectionServer(String host, int port) throws UnknownHostException, IOException {
 		_clientSocket = new Socket(host, port);
 		_outServer = _clientSocket.getOutputStream();
 		_inServer = _clientSocket.getInputStream();
@@ -76,21 +78,24 @@ public class Client {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public Socket connectionNeighboor (String ipNext, int port) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
+	public Socket connectionNeighboor(String ipNext, int port) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
 		_socketNeighboor = new Socket(ipNext, port);
 		_outClient = _socketNeighboor.getOutputStream();
-		_inClient = _socketNeighboor.getInputStream();
 		return _socketNeighboor;
 		
 	} // connectionNeighboor()
 	
 	/**
 	 * Method which permits to receive message from precedent client in the ring
+	 * @param port : Listening port
+	 * @return The connection socket
 	 * @throws IOException
 	 */
-	public void startServerMode (int port) throws IOException {
+	public Socket startServerMode(int port) throws IOException {
 		_listenSocket = new ServerSocket(port);
-		_listenSocket.accept();
+		_precSocket = _listenSocket.accept();
+		_inClient = _precSocket.getInputStream();
+		return _precSocket;
 		
 	} // startServerMode()
 	
@@ -98,19 +103,19 @@ public class Client {
 	 * Close the socket which permits communication between server and client
 	 * @throws IOException
 	 */
-	public void closeConnectionServer () throws IOException {
+	public void closeConnectionServer() throws IOException {
 		_clientSocket.close();
 		
-	} // closeConnectionServer ()
+	} // closeConnectionServer()
 	
 	/**
 	 * Close the socket which permits communication between client and neighboor
 	 * @throws IOException
 	 */
-	public void closeConnectionNeighboor () throws IOException {
+	public void closeConnectionNeighboor() throws IOException {
 		_socketNeighboor.close();
 		
-	} // closeConnectionNeighboor ()
+	} // closeConnectionNeighboor()
 	
 	/**
 	 * Method which permits to send byte array
@@ -121,7 +126,7 @@ public class Client {
 		_outServer.write(message);
 		_outServer.flush();
 		
-	} // send ()
+	} // send()
 
 	/**
 	 * Méthod which permits to receive byte array
@@ -135,6 +140,6 @@ public class Client {
 		_inServer.read(data); // Reading the inputstream
 		return data;
 		
-	} // receive ()
+	} // receive()
 	
 } // Client

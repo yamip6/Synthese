@@ -1,16 +1,16 @@
 package utils;
 
-import java.io.BufferedReader;
-import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 
+import javax.swing.JOptionPane;
+
 public class Utils {
+	
 	/**
 	 * 
 	 * @param buffer
@@ -25,13 +25,14 @@ public class Utils {
 			hex += String.format("%02x", Byte.valueOf(buffer[i]));
 
 		return hex;	
+		
 	} // byteArrayToHexString()
 	
 	/**
-	 * Méthode permettant de convertir un int en tableau d'octets
-	 * @param value : Valeur entière que l'on souhaite convertir
-	 * @param octet : Nombre d'octets du tableau d'octets résultat
-	 * @return Le tableau d'octets
+	 * Method which convert int to byte array
+	 * @param value : Integer value that you want to convert
+	 * @param octet : Number of bytes in the byte array result
+	 * @return The byte array
 	 */
     public static final byte[] intToByteArray(int value, int octet) {
     	switch(octet) {
@@ -48,9 +49,9 @@ public class Utils {
     } // intToByteArray()
     
     /**
-     * Méthode permettant de convertir un tableau d'octets en valeur entière
-     * @param b : Tableau d'octets à convertir
-     * @return Entier correspondant
+     * Method to convert a byte array to an integer value
+     * @param b : Byte array to convert
+     * @return Integer corresponding
      */
     public static final int byteArrayToInt(byte[] b) {
         int value = 0;   
@@ -63,10 +64,10 @@ public class Utils {
     } // byteArrayToInt()
     
     /**
-     * Méthode permettant de concaténer 2 tableaux d'octets
-     * @param a : Premier tableau d'octets
-     * @param b : Second tableau d'octets
-     * @return Le tableau d'octets composé de a suivit de b
+     * Method to concatenate 2 byte arrays
+     * @param a : First byte array
+     * @param b : Second byte array
+     * @return The byte array composed of a followed by b
      */
 	public static byte[] concatenateByteArray(byte[] a, byte[] b) {
 		byte[] c = new byte[a.length + b.length];
@@ -76,29 +77,44 @@ public class Utils {
 		
 	} // concatenateByteArray()	
 	
+	/**
+	 * 
+	 * @param buffer
+	 * @param file
+	 * @throws IOException
+	 */
 	public static void saveBuffer(byte[] buffer, File file) throws IOException {
 		OutputStream os = new FileOutputStream(file);
 		os.write(buffer);
 		os.close();
+		
 	} // saveBuffer()
 	
+	/**
+	 * 
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
 	public static byte[] readBuffer(File file) throws IOException {
 		InputStream is = new FileInputStream(file);
 		byte result[] = new byte[(int) file.length()];
 		is.read(result);
 		is.close();
-		return result;	
+		return result;
+
 	} // readBuffer()
 	
+	/**
+	 * 
+	 * @param message
+	 * @return
+	 * @throws IOException
+	 */
 	public static char[] readPassword(String message) throws IOException {
-		Console con = System.console();
-		if (con != null)
-			return con.readPassword(message);
-		else {
-			System.out.println(message);
-			return new BufferedReader(new InputStreamReader(System.in)).readLine().toCharArray();
-		}
+		String pass = JOptionPane.showInputDialog(null, message, "Asking pass", JOptionPane.QUESTION_MESSAGE);
+		return pass.toCharArray();
 		
 	} // readPassword()
 	
-} // ManipString
+} // Utils

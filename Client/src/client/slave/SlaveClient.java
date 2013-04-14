@@ -1,4 +1,4 @@
-package clientSlave;
+package client.slave;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -13,6 +13,7 @@ import java.io.ObjectOutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -22,45 +23,51 @@ import javax.crypto.NoSuchPaddingException;
 import utils.Tools;
 import utils.Utils;
 
-import clientSupreme.Client;
+import client.Client;
 
-public class ClientSlave extends Client {
+public class SlaveClient extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
-	private HashMap<InetAddress, String> _listGroups; // on mettra plustot <ipCreateur, PseudoCreateur, NomGroupe>
+	private HashMap<InetAddress, String> _listGroups; // on mettra plustot <ipCreateur en String !!!!!, PseudoCreateur, NomGroupe>
 	
-	private InetAddress _groupIpR;
-	private MulticastSocket _broadcastSocketR;
+	////////////On devrait réutiliser la multicastsocket de client et ipGroup de client et pas en refaire de nouveaux !!!
+	/** Brodcast socket to receive ring creation */
+	private MulticastSocket _broadcastSocketCration;
+	/** Ip adress of the broadcast group for ring creation */
+	private InetAddress _ipGroupCreation;
+	////////////-----------------------------------------------
 	
+	/** */
 	private volatile boolean _loop = true;
 	
 	/**
 	 * Constructor
 	 */
-	public ClientSlave () {
+	public SlaveClient(String username) {
 		try {
-			// Vérification de l'existence d'une paire de clef
-			// Sauvegarde si necessaire (si un seul fichier est absent on régénère tout)
+			// Verifying the existence of a key pair
+			// Backup if necessary (if only one file is missing regenerating all)
 			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
-				Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
+				Tools.keyGenerator();
 			
-			_groupIp = InetAddress.getByName("239.255.80.84");
+			_username = username;
+			_ipGroup = InetAddress.getByName("239.255.80.84");
 			_broadcastSocket = new MulticastSocket(9999);
-			_broadcastSocket.joinGroup(_groupIp);
-			_groupIpR = InetAddress.getByName("239.255.80.85");
-			_broadcastSocketR = new MulticastSocket(9999);
+			_broadcastSocket.joinGroup(_ipGroup);
+			_ipGroupCreation = InetAddress.getByName("239.255.80.85"); // Voir début
+			_broadcastSocketCration = new MulticastSocket(9999); // Voir début
 			_listGroups = new HashMap<InetAddress,String>();
 		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | InvalidKeySpecException e) {
 			e.printStackTrace();
 		}
 		
-	} // ClientSlave ()
+	} // SlaveClient()
 
 	/**
 	 * Allow a client to receive invitation then if the client wished this group, he sends an answer
 	 * @throws IOException
 	 */
-	public void receiveInvitation () throws IOException{
+	public void receiveInvitation() throws IOException{
 		assert(_listGroups != null);
 		byte[] receiveDtg = new byte[1024];
 		byte[] ack = new byte[1024];
@@ -76,13 +83,13 @@ public class ClientSlave extends Client {
 			_broadcastSocket.send(confirm);
 			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(grpInvitation)))
 				_listGroups.put(invitation.getAddress(), grpInvitation);
-			if (grpInvitation.equals("stop")) // Donnée mebre byte array (on peut utiliser NOK ou une nouvelle
+			if (grpInvitation.equals("stop")) // Donnée membre byte array (on peut utiliser NOK ou une nouvelle var
 				_loop = false;
 		}
 		
-		@SuppressWarnings("resource")
-		ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(new File("log.txt")));
-		os.writeObject(get_listGroups());
+		@SuppressWarnings("resource") // DEBUG
+		ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(new File("log.txt"))); // DEBUG
+		os.writeObject(get_listGroups()); // DEBUG
 		assert(_listGroups.size() > 0);
 		
 	} // receiveInvitation ()
@@ -94,7 +101,7 @@ public class ClientSlave extends Client {
 	 * @throws IOException
 	 */
 	public void requestJoinGroup (String grp, InetAddress ipClientBis) throws IOException{
-		byte[] answer = new String("invitation true " + grp).getBytes();
+		byte[] answer = new String("invitation true " + grp).getBytes(); // A normaliser avec byte array ok
 		@SuppressWarnings("resource")
 		DatagramSocket tmp = new DatagramSocket();
 		DatagramPacket confirm = new DatagramPacket(answer, answer.length, ipClientBis, 9999);
@@ -110,9 +117,9 @@ public class ClientSlave extends Client {
 	public void linkNeighboor (String ipClientBis) throws Exception {
 		byte[] receiveDtg = new byte[1024];
 		DatagramPacket pck = new DatagramPacket(receiveDtg, receiveDtg.length);
-		_broadcastSocketR.joinGroup(_groupIpR);
-		_broadcastSocketR.receive(pck);
-		ArrayList<String> listIps = Utils.arrayByteToList(receiveDtg);
+		_broadcastSocketCration.joinGroup(_ipGroupCreation);
+		_broadcastSocketCration.receive(pck);
+		ArrayList<String> listIps = Utils.byteArrayToList(receiveDtg);
 		int pos;
 		pos = (listIps.indexOf(InetAddress.getLocalHost()));
 		// The client searchs its ip to determinate the ip following its own ip :
@@ -120,15 +127,15 @@ public class ClientSlave extends Client {
 			connectionNeighboor(listIps.get(pos+1), _port);
 			System.out.println("Two clients linked !!!");  // DEBUG
 		}
-		else {
+		else
 			throw new Exception("Ip doesn't exist in the list of accepted clients...");
-		}
 		
 		startServerMode(_port);
+		
 	} // linkNeighboor ()
 	
 	/**
-	 * 
+	 * Accessor
 	 * @return the groups with their creators (IP)
 	 */
 	public HashMap<InetAddress, String> get_listGroups() {
@@ -136,4 +143,4 @@ public class ClientSlave extends Client {
 		
 	} // get_listGroups ()
 
-} // ClientSlave
+} // SlaveClient

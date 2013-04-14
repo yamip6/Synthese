@@ -1,4 +1,5 @@
 package server.controller;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,9 +7,11 @@ import java.io.OutputStream;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyPair;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import java.security.KeyPair;
 
 import utils.Crypto;
 import utils.Tools;
@@ -39,17 +42,18 @@ public class Server {
 	/** Constant of creation group */
 	public final byte[] CREATION = new byte[]{0x2f, 0x00};
 	
-	public Server (int port){
+	public Server(int port){
 		try {
 			_groupList = new ArrayList<String>();
-			// Vérification de l'existence d'une paire de clef
-			// Sauvegarde si necessaire (si un seul fichier est absent on régénère tout)
+			// Verifying the existence of a key pair
+			// Backup if necessary (if only one file is missing regenerating all)
 				if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
-					Tools.keyGenerator(); // Idem que Client Slave on devrait faire un constructeur commun
-			startServer(port); // Port à paramétrer dans le GUI
+					Tools.keyGenerator();
+			startServer(port);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 	} // Server ()
 	
 	/**
@@ -68,9 +72,8 @@ public class Server {
 	} // startServer()
 	
 	
-	public void service () throws Exception {
-		while(true)
-        {
+	public void service() throws Exception {
+		while(true) {
 			byte[] request = receive(2);
 			if(Arrays.equals(request, CREATION)) {
 				identityControl();
@@ -82,7 +85,7 @@ public class Server {
 				System.out.println("Received from client : " + new String(grpName)); // DEBUG
 				size = receive(4);
 				byte[] signature = receive(Utils.byteArrayToInt(size));
-				boolean result = Tools.verifSign(Tools.concatenateByteArray(username, grpName), _publicKey, signature);
+				boolean result = Tools.verifSign(Utils.concatenateByteArray(username, grpName), _publicKey, signature);
 				if(result && !_groupList.contains(new String(grpName))) { // Et test authentification
 					_groupList.add(new String(grpName));
 					send(OK); // On chiffre la réponse avec le mot de passe de la bdd, si lz client arrive a déchiffrer c'est qu'il s'est authentifier
@@ -97,18 +100,18 @@ public class Server {
 	} // service ()
 	
 	/**
-	 * Méthode réalisant le contrôle d'identité
+	 * Method which realize the identity control between server and client bis
 	 * @throws Exception
 	 */
 	public void identityControl() throws Exception {
-        // Réception du hash de controle d'identité
+		// Receipt of hash of identity control
 		byte[] tailleHash = receive(1);
 		byte[] hash = receive(Utils.byteArrayToInt(tailleHash));
 		System.out.println("Réception du hash : " + Utils.byteArrayToHexString(hash)); // DEBUG
 		
-		// Vérification du hash
+		// Hash check
 		if(Tools.isPubKeyStored(hash)) {
-			// Envoie OK
+			// Sending OK
 			_publicKey = Crypto.loadPubKey(new File("contacts/" + Utils.byteArrayToHexString(hash) + ".key")).getEncoded();
 			System.out.println("Vérification OK (envoie OK)."); // DEBUG
 			send(OK);
@@ -116,36 +119,36 @@ public class Server {
 			System.out.println("Inversion des rôles."); //DEBUG
 			changeRole();
 		} else {
-			// Envoie du challenge
+			// Sending challenge
 			System.out.println("Envoie du challenge (envoie NOK)."); // DEBUG
 			byte[] challenge = Tools.getChallenge();
 			send(NOK);
 			send(challenge);
 			
-			// On recoit la clé publique et la signature
+			// Receiving the public key and signature
 			System.out.println("Réception de la clef publique et de la signature."); // DEBUG
 			byte[] taillePubKey = receive(4);
 			_publicKey = receive(Utils.byteArrayToInt(taillePubKey));
 			byte[] tailleSign = receive(4);
 		    byte[] signature = receive(Utils.byteArrayToInt(tailleSign));
 
-		    // Vérification de la signature
-		    byte[] data = Tools.concatenateByteArray(_publicKey, challenge);
+		    // Signature check
+		    byte[] data = Utils.concatenateByteArray(_publicKey, challenge);
 		    boolean verif = Tools.verifSign(data, _publicKey, signature);
 		    if(verif) {
 		    	System.out.println("La vérification a réussie."); //DEBUG
 		    	
-		    	// Envoie du hash
+		    	// Sending hash
 		    	System.out.println("Envoie du hash."); // DEBUG
 		    	byte[] empreinte = Tools.hash(_publicKey);
 		    	send(Utils.intToByteArray(empreinte.length, 1));
 		    	send(empreinte);
 		    	
-		    	// Validation de l'empreinte
+		    	// Imprint validation
 		    	byte[] valide = receive(2);
 		    	if(Arrays.equals(valide, OK)) {
 		    		System.out.println("Le client a validé l'empreinte."); // DEBUG
-		    	    // Sauvegarde de la clé publique
+		    		// Saving the public key
 		    		System.out.println("Sauvegarde de la clé publique."); // DEBUG
 		    	    Utils.saveBuffer(_publicKey, new File("contacts/" + Utils.byteArrayToHexString(empreinte) + ".key"));
 		    	    
@@ -160,24 +163,24 @@ public class Server {
 	} // identityControl()
 	
 	/**
-	 * Méthode permettant d'échanger les rôles au cours du contrôle d'identité
-	 * @throws Exception : Tout exception (non géré)
+	 * Method which permit to change role during the identity control
+	 * @throws Exception
 	 */
 	public void changeRole() throws Exception {
-		// Hashage MD5 de le clef publique
+		// MD5 hash of the public key
 		byte[] hash = Tools.hashFile("keys/public.key");
-		// Envoie du hash
+		// Sending hash
 		System.out.println("Envoie de l'empreinte de la clef publique : " + Utils.byteArrayToHexString(hash)); // DEBUG
 		send(Utils.intToByteArray(hash.length, 1));
 		send(hash);
 
-		// Résultat du hash
+		// Hash result
 		byte[] verif = receive(2);
 		if(Arrays.equals(verif, OK)) {
 			System.out.println("Votre clef est déjà enregistrée auprès du destinataire (réceprion OK)."); // DEBUG
-			// Fin de l'échange
+			// End of the exchange
 		} else if(Arrays.equals(verif, NOK)) {
-			// Réception du challenge
+			// Receiving the challenge
 			byte[] challengeR = receive(16);
 			System.out.println("Réception du challenge (réception NOK)."); // DEBUG
 
@@ -185,24 +188,24 @@ public class Server {
 			System.out.println("Charmement de votre paire de clefs."); // DEBUG
 			_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
 
-			// Envoie de la clef publique et de la signature clef publique/challenge
+			// Sending the public key and the signature public key/challenge
 			System.out.println("Envoie de la clef publique/signature."); // DEBUG
 			byte[] pubKey = _keyPair.getPublic().getEncoded();
 			send(Utils.intToByteArray(pubKey.length, 4));
 			send(pubKey);
 						
-			byte[] signature = Tools.sign(_keyPair.getPrivate(), Tools.concatenateByteArray(_keyPair.getPublic().getEncoded(), challengeR));
+			byte[] signature = Tools.sign(_keyPair.getPrivate(), Utils.concatenateByteArray(_keyPair.getPublic().getEncoded(), challengeR));
 			send(Utils.intToByteArray(signature.length, 4));
 			send(signature);
 
-			// Réception de l'empreinte
+			// Receiving the imprint
 			byte[] tailleHash = receive(1);
 			byte[] empreinte = receive(Utils.byteArrayToInt(tailleHash));
 			System.out.println("Enpreinte reçue : " + Utils.byteArrayToHexString(empreinte));
 
-			// Comparaison des empreintes
+			// Comparison of imprints
 			System.out.println("Mon empreinte : " + Utils.byteArrayToHexString(hash));
-			// Validation des empreintes
+			// Footprints validation
 			if(Arrays.equals(empreinte, hash)) {
 				System.out.println("Les empreintes sont bien valides.");
 				send(OK);
@@ -213,12 +216,12 @@ public class Server {
 		}
 	} // changeRole()
 	
-	public void disconnection () throws IOException {
+	public void disconnection() throws IOException {
 		// Closing the sockets
 		_clientSocket.close();
 		_listenSocket.close();
 		
-	} // disconnection ()
+	} // disconnection()
 	
 	/**
 	 * Method which permits to send byte array
@@ -244,6 +247,5 @@ public class Server {
 		return data;
 		
 	} // receive()
-	
 
 } // Server

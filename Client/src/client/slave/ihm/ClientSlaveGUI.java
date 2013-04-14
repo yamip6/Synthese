@@ -1,4 +1,4 @@
-package server.ihm;
+package client.slave.ihm;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -15,14 +15,14 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 @SuppressWarnings("serial")
-public class ServerGUI extends JFrame {
-    /** Graphic panel to configure the server (port) */
+public class ClientSlaveGUI extends JFrame {
+    /** Graphic pannel of client configuration (and join group) */
     protected static Config _config;
     
     /**
      * Constructor
      */
-    public ServerGUI() {
+    public ClientSlaveGUI() {
         try { // Forcing the use of the system's look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
@@ -34,9 +34,9 @@ public class ServerGUI extends JFrame {
         _config = new Config();
         _config.setBounds(0, 0, 500, 350);
         _config.setVisible(true);
-        add(_config);
+        getContentPane().add(_config);
         
-        // Shared graphical components (of the window)
+        // Composants graphique communs (de la fenêtre)
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         
@@ -61,14 +61,14 @@ public class ServerGUI extends JFrame {
             } // windowClosing()
         });
         
-    } // ServerGUI() 
+    } // ClientSlaveGUI() 
     
     /**
-     * Method which permits to launch the server application
+     * Method which permits to launch the client slave application
      * @param args
      */
     public static void main(String[] args) {
-    	ServerGUI fr = new ServerGUI();
+    	ClientSlaveGUI fr = new ClientSlaveGUI();
         fr.setTitle("Secured exchange group");
         fr.setSize(500, 350);
         fr.setLocationRelativeTo(null);
@@ -78,4 +78,4 @@ public class ServerGUI extends JFrame {
         
     } // main()
     
-} // ServerGUI
+} // ClientSlaveGUI
