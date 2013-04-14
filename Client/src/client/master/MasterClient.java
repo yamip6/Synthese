@@ -237,9 +237,8 @@ public class MasterClient extends Client {
 		while (_loop) {
 			_broadcastSocket.send(toSend);
 			reception = new DatagramPacket(receiveDtg, receiveDtg.length);
-			if(_start) { // Use byte array constant for stop
-				byte[] stop = new String("stop").getBytes();
-				toSend = new DatagramPacket(stop, stop.length, _ipGroup, 9999);
+			if(_start) {
+				toSend = new DatagramPacket(NOK, 2, _ipGroup, 9999);
 				_broadcastSocket.send(toSend);
 				break;
 			}

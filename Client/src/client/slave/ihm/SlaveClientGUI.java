@@ -1,4 +1,4 @@
-package client.master.ihm;
+package client.slave.ihm;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -15,20 +15,18 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 @SuppressWarnings("serial")
-public class ClientMasterGUI extends JFrame {
-    /** Graphic panel of configuration clientBis/server */
+public class SlaveClientGUI extends JFrame {
+    /** Graphic pannel of client configuration (and join group) */
     protected static Config _config;
-    /** Graphic panel of starting discussion with other clients */
-    protected static ChatStart _chat;
     
     /**
      * Constructor
      */
-    public ClientMasterGUI() {
+    public SlaveClientGUI() {
         try { // Forcing the use of the system's look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
+            System.out.println("Erreur durant le chargement du look and feel.");
         }
         // It forces all components to redraw the window with the system's look and feel
         SwingUtilities.updateComponentTreeUI(this);
@@ -36,14 +34,9 @@ public class ClientMasterGUI extends JFrame {
         _config = new Config();
         _config.setBounds(0, 0, 500, 350);
         _config.setVisible(true);
-        add(_config);
+        getContentPane().add(_config);
         
-        _chat = new ChatStart();
-        _chat.setBounds(0, 0, 500, 350);
-        _chat.setVisible(false);
-        add(_chat);
-        
-        // Shared graphical components (of the window)
+        // Composants graphique communs (de la fenêtre)
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         
@@ -54,7 +47,7 @@ public class ClientMasterGUI extends JFrame {
         mntmQuitter.addActionListener(new ActionListener() {
         	@Override
             public void actionPerformed(ActionEvent e) {
-                int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Stopping the application", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            	int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Stopping the application", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if(option == JOptionPane.OK_OPTION) System.exit(0);
             } // actionPerformed()
         });
@@ -68,14 +61,14 @@ public class ClientMasterGUI extends JFrame {
             } // windowClosing()
         });
         
-    } // ClientMasterGUI() 
+    } // SlaveClientGUI() 
     
     /**
-     * Method which permits to launch the client bis application
+     * Method which permits to launch the client slave application
      * @param args
      */
     public static void main(String[] args) {
-    	ClientMasterGUI fr = new ClientMasterGUI();
+    	SlaveClientGUI fr = new SlaveClientGUI();
         fr.setTitle("Secured exchange group");
         fr.setSize(500, 350);
         fr.setLocationRelativeTo(null);
@@ -85,4 +78,4 @@ public class ClientMasterGUI extends JFrame {
         
     } // main()
     
-} // ClientMasterGUI
+} // SlaveClientGUI

@@ -83,8 +83,8 @@ public class Config extends JPanel {
 					_master.responseGroupCreation();
 					invitation();
 					
-					ClientMasterGUI._config.setVisible(false);
-					ClientMasterGUI._chat.setVisible(true);
+					MasterClientGUI._config.setVisible(false);
+					MasterClientGUI._chat.setVisible(true);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				} 

@@ -3,6 +3,7 @@ package client.slave.ihm;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JButton;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 
 import java.awt.Color;
@@ -36,9 +37,9 @@ public class Config extends JPanel {
         add(_username);
         _username.setColumns(10);
         
-        JLabel lblNewLabel = new JLabel("Liste des groupes recus (et de leur cr\u00E9ateur) dans une JTABLE");
-        lblNewLabel.setBounds(85, 42, 316, 144);
-        add(lblNewLabel);
+        JTable table = new JTable(new TableModel());
+        table.setBounds(85, 42, 316, 144);
+        add(table);
         
         JButton btnLaunchServer = new JButton("Join group");
         btnLaunchServer.addActionListener(new ActionListener() {
@@ -46,8 +47,9 @@ public class Config extends JPanel {
         	public void actionPerformed(ActionEvent e) {
         		try {
         			_slave = new SlaveClient(_username.getText());
-        			_slave.receiveInvitation(); // requestjoingroup ????
-        			_slave.linkNeighboor("192.168.0.15"); // L'ip ne doit pas etre entré en dur !!!!!!
+        			_slave.receiveInvitation();
+        			// _slave.requestJoinGroup(grp, ipClientBis); // devrait rendre un booleen avec raison echec
+        			_slave.linkNeighboor("192.168.1.25"); //_slave.get_listGroups().get("ligne sélectionnée");
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				} 

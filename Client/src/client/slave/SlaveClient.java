@@ -15,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.crypto.IllegalBlockSizeException;
@@ -28,7 +29,7 @@ import client.Client;
 public class SlaveClient extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
-	private HashMap<InetAddress, String> _listGroups; // on mettra plustot <ipCreateur en String !!!!!, PseudoCreateur, NomGroupe>
+	private HashMap<String, String> _listGroups;
 	
 	////////////On devrait réutiliser la multicastsocket de client et ipGroup de client et pas en refaire de nouveaux !!!
 	/** Brodcast socket to receive ring creation */
@@ -56,7 +57,7 @@ public class SlaveClient extends Client {
 			_broadcastSocket.joinGroup(_ipGroup);
 			_ipGroupCreation = InetAddress.getByName("239.255.80.85"); // Voir début
 			_broadcastSocketCration = new MulticastSocket(9999); // Voir début
-			_listGroups = new HashMap<InetAddress,String>();
+			_listGroups = new HashMap<String,String>();
 		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | InvalidKeySpecException e) {
 			e.printStackTrace();
 		}
@@ -75,15 +76,15 @@ public class SlaveClient extends Client {
 		while(_loop){
 			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
 			_broadcastSocket.receive(invitation);
-			String grpInvitation = new String(invitation.getData(), 0, invitation.getLength());
-			System.out.println(grpInvitation); // DEBUG
+			byte[] grpInvitation = invitation.getData();
+			System.out.println(new String(grpInvitation)); // DEBUG
 			System.out.println("ip : " + invitation.getAddress()); // DEBUG
 			ack = _broadcastSocket.getLocalAddress().getAddress();
 			confirm = new DatagramPacket(ack, ack.length, invitation.getAddress(), invitation.getPort());
 			_broadcastSocket.send(confirm);
-			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(grpInvitation)))
-				_listGroups.put(invitation.getAddress(), grpInvitation);
-			if (grpInvitation.equals("stop")) // Donnée membre byte array (on peut utiliser NOK ou une nouvelle var
+			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation))))
+				_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
+			if (Arrays.equals(grpInvitation, NOK))
 				_loop = false;
 		}
 		
@@ -92,7 +93,7 @@ public class SlaveClient extends Client {
 		os.writeObject(get_listGroups()); // DEBUG
 		assert(_listGroups.size() > 0);
 		
-	} // receiveInvitation ()
+	} // receiveInvitation()
 	
 	/**
 	 * Following process invitation. The client choose among groups in listGroups he's interested, the group to join
@@ -100,21 +101,21 @@ public class SlaveClient extends Client {
 	 * @param ipClientBis the Address IP of the client Master
 	 * @throws IOException
 	 */
-	public void requestJoinGroup (String grp, InetAddress ipClientBis) throws IOException{
+	public void requestJoinGroup(String grp, InetAddress ipClientBis) throws IOException{
 		byte[] answer = new String("invitation true " + grp).getBytes(); // A normaliser avec byte array ok
 		@SuppressWarnings("resource")
 		DatagramSocket tmp = new DatagramSocket();
 		DatagramPacket confirm = new DatagramPacket(answer, answer.length, ipClientBis, 9999);
 		tmp.send(confirm);
 		
-	} // requestJoinGroup ()
+	} // requestJoinGroup()
 	
 	/**
 	 * Each client must use this function to bind itself with its neighboor for the creation of the ring
 	 * @param ipClientBis is the Address IP of the client master
 	 * @throws Exception 
 	 */
-	public void linkNeighboor (String ipClientBis) throws Exception {
+	public void linkNeighboor(String ipClientBis) throws Exception {
 		byte[] receiveDtg = new byte[1024];
 		DatagramPacket pck = new DatagramPacket(receiveDtg, receiveDtg.length);
 		_broadcastSocketCration.joinGroup(_ipGroupCreation);
@@ -132,15 +133,15 @@ public class SlaveClient extends Client {
 		
 		startServerMode(_port);
 		
-	} // linkNeighboor ()
+	} // linkNeighboor()
 	
 	/**
 	 * Accessor
 	 * @return the groups with their creators (IP)
 	 */
-	public HashMap<InetAddress, String> get_listGroups() {
+	public HashMap<String, String> get_listGroups() {
 		return _listGroups;
 		
-	} // get_listGroups ()
+	} // get_listGroups()
 
 } // SlaveClient
