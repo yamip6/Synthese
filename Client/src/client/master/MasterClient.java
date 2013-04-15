@@ -221,9 +221,7 @@ public class MasterClient extends Client {
 		// The client (bis) will stop the loop when he wants, so the discussion could begin
 		while (_loop) {
 			_broadcastSocket.send(toSend);
-			System.out.println("send");
 			reception = new DatagramPacket(receiveDtg, receiveDtg.length);
-			System.out.println("receive");
 			if(_start) {
 				toSend = new DatagramPacket(NOK, 2, _ipGroup, 9999);
 				_broadcastSocket.send(toSend);
@@ -234,7 +232,6 @@ public class MasterClient extends Client {
 	
 			if (!_acceptedClients.contains(reception.getAddress().getHostAddress()))   
 				_acceptedClients.add(reception.getAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
-			System.out.println("Client added"); // DEBUG
 		}
 		
 	} // Invitation()

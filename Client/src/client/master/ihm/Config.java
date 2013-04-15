@@ -1,7 +1,6 @@
 package client.master.ihm;
 
 import javax.swing.JPanel;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.JTextField;
@@ -24,9 +23,6 @@ public class Config extends JPanel {
 	private JTextField _ipServer;
 	/** Connection port of the server */
 	private JTextField _port;
-	
-	/** The master client */
-	private MasterClient _master;
 	
     /**
      * Constructor
@@ -78,10 +74,20 @@ public class Config extends JPanel {
         	@Override
         	public void actionPerformed(ActionEvent e) {
         		try {
-        			_master = new MasterClient(_ipServer.getText(), Integer.parseInt(_port.getText()), _username.getText());
-					_master.requestGroupCreation(_groupName.getText());
-					_master.responseGroupCreation();
-					invitation();
+        			MasterClientGUI.set_master(new MasterClient(_ipServer.getText(), Integer.parseInt(_port.getText()), _username.getText()));
+        			MasterClientGUI.get_master().requestGroupCreation(_groupName.getText());
+        			MasterClientGUI.get_master().responseGroupCreation();
+					Thread t = new Thread(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								MasterClientGUI.get_master().invitation(_groupName.getText());
+							} catch (IOException | InterruptedException e) {
+								e.printStackTrace();
+							}
+						} // run()
+					});
+					t.start();
 					
 					MasterClientGUI._config.setVisible(false);
 					MasterClientGUI._chat.setVisible(true);
@@ -94,40 +100,5 @@ public class Config extends JPanel {
         add(btnLaunchServer);   
         
     } // Config()
-    
-    private void invitation() {
-		Thread t = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					_master.invitation(_groupName.getText());
-				} catch (IOException | InterruptedException e) {
-					e.printStackTrace();
-				}
-			} // run()
-		});
-		Thread t2 = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				JFrame f = new JFrame(); JButton start = new JButton("Start discussion");
-				start.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent arg0) {
-						_master.set_start(true);
-						try {
-							// On considère un seul serveur !
-							_master.discussionGroupCreation();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				});
-				f.add(start); f.pack(); f.setVisible(true);			
-			} // run()
-		});
-		t.start();
-		t2.start();
-		
-	} // invitation ()
     
 } // Config

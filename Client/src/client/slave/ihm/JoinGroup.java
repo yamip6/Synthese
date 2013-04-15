@@ -8,12 +8,8 @@ import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
-import client.slave.SlaveClient;
-
 @SuppressWarnings("serial")
 public class JoinGroup extends JPanel {
-	/** Slave client */
-	private SlaveClient _slave;
 	
     /**
      * Constructor
@@ -34,7 +30,7 @@ public class JoinGroup extends JPanel {
         	public void actionPerformed(ActionEvent e) {
         		try {
         			// _slave.requestJoinGroup(grp, ipClientBis); // devrait rendre un booleen avec raison echec
-        			_slave.linkNeighboor("192.168.1.25"); //_slave.get_listGroups().get("ligne sélectionnée");
+        			if(false)SlaveClientGUI.get_slave().linkNeighboor("192.168.1.25"); //_slave.get_listGroups().get("ligne sélectionnée");
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				} 

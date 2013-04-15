@@ -9,6 +9,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import client.slave.SlaveClient;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
@@ -16,10 +18,22 @@ import java.awt.event.WindowEvent;
 
 @SuppressWarnings("serial")
 public class SlaveClientGUI extends JFrame {
-    /** Graphic pannel of client configuration (and join group) */
+    /** Graphic pannel of client configuration */
     protected static Config _config;
-    
-    /**
+    /** Graphic pannel to join a group */
+    protected static JoinGroup _jgroup;
+    /** Slave client */
+	private static SlaveClient _slave;
+	
+    public static SlaveClient get_slave() {
+		return _slave;
+	}
+
+	public static void set_slave(SlaveClient slave) {
+		_slave = slave;
+	}
+
+	/**
      * Constructor
      */
     public SlaveClientGUI() {
@@ -34,7 +48,12 @@ public class SlaveClientGUI extends JFrame {
         _config = new Config();
         _config.setBounds(0, 0, 500, 350);
         _config.setVisible(true);
-        getContentPane().add(_config);
+        add(_config);
+        
+        _jgroup = new JoinGroup();
+        _jgroup.setBounds(0, 0, 500, 350);
+        _jgroup.setVisible(false);
+        add(_jgroup);
         
         // Composants graphique communs (de la fenêtre)
         JMenuBar menuBar = new JMenuBar();

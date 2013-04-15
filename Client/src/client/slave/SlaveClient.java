@@ -55,8 +55,7 @@ public class SlaveClient extends Client {
 			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
 			_broadcastSocket.receive(invitation); // Bloque ici
 			byte[] grpInvitation = invitation.getData();
-			System.out.println(new String(grpInvitation)); // DEBUG
-			System.out.println("ip : " + invitation.getAddress()); // DEBUG
+			System.out.println(invitation.getAddress()); // DEBUG
 			ack = _broadcastSocket.getLocalAddress().getAddress();
 			confirm = new DatagramPacket(ack, ack.length, invitation.getAddress(), invitation.getPort());
 			_broadcastSocket.send(confirm);
