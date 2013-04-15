@@ -10,18 +10,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-
-import utils.Tools;
 import utils.Utils;
 
 import client.Client;
@@ -31,12 +23,6 @@ public class SlaveClient extends Client {
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<String, String> _listGroups;
 	
-	////////////On devrait réutiliser la multicastsocket de client et ipGroup de client et pas en refaire de nouveaux !!!
-	/** Brodcast socket to receive ring creation */
-	private MulticastSocket _broadcastSocketCration;
-	/** Ip adress of the broadcast group for ring creation */
-	private InetAddress _ipGroupCreation;
-	////////////-----------------------------------------------
 	
 	/** */
 	private volatile boolean _loop = true;
@@ -45,20 +31,10 @@ public class SlaveClient extends Client {
 	 * Constructor
 	 */
 	public SlaveClient(String username) {
+		super(username);
 		try {
-			// Verifying the existence of a key pair
-			// Backup if necessary (if only one file is missing regenerating all)
-			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
-				Tools.keyGenerator();
-			
-			_username = username;
-			_ipGroup = InetAddress.getByName("239.255.80.84");
-			_broadcastSocket = new MulticastSocket(9999);
-			_broadcastSocket.joinGroup(_ipGroup);
-			_ipGroupCreation = InetAddress.getByName("239.255.80.85"); // Voir début
-			_broadcastSocketCration = new MulticastSocket(9999); // Voir début
 			_listGroups = new HashMap<String,String>();
-		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | InvalidKeySpecException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
@@ -118,8 +94,10 @@ public class SlaveClient extends Client {
 	public void linkNeighboor(String ipClientBis) throws Exception {
 		byte[] receiveDtg = new byte[1024];
 		DatagramPacket pck = new DatagramPacket(receiveDtg, receiveDtg.length);
-		_broadcastSocketCration.joinGroup(_ipGroupCreation);
-		_broadcastSocketCration.receive(pck);
+		_ipGroup = InetAddress.getByName("239.255.80.85");
+		_broadcastSocket = new MulticastSocket(9999);
+		_broadcastSocket.joinGroup(_ipGroup);
+		_broadcastSocket.receive(pck);
 		ArrayList<String> listIps = Utils.byteArrayToList(receiveDtg);
 		int pos;
 		pos = (listIps.indexOf(InetAddress.getLocalHost()));

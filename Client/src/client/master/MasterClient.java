@@ -20,13 +20,6 @@ public class MasterClient extends Client {
 	/** List of ip clients which accepted the invitation and are accepted to join the group */
 	private ArrayList<String> _acceptedClients; 
 	
-	////////////On devrait réutiliser la multicastsocket de client et ipGroup de client et pas en refaire de nouveaux !!!
-	/** Brodcast socket to send ring creation */
-	private MulticastSocket _broadcastSocketCration;
-	/** Ip adress of the broadcast group for ring creation */
-	private InetAddress _ipGroupCreation;
-    ////////////-----------------------------------------------
-	
 	/** Server public key */
     private byte[] _publicKey;
 	
@@ -42,19 +35,9 @@ public class MasterClient extends Client {
 	 * @param username is the user name of the client bis    
 	 */
 	public MasterClient(String adressServer, int port, String username) {
+		super(username);
 		try {
-			// Verifying the existence of a key pair
-			// Backup if necessary (if only one file is missing regenerating all)
-			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
-				Tools.keyGenerator();
-						
-            _username = username;
 			connectionServer(adressServer, port);
-			_ipGroup = InetAddress.getByName("239.255.80.84"); // A voir
-			_ipGroupCreation = InetAddress.getByName("239.255.80.85"); // Voir début
-			_broadcastSocket = new MulticastSocket();
-			_broadcastSocket.joinGroup(_ipGroup);
-			_broadcastSocketCration = new MulticastSocket(); // Voir début
 			_acceptedClients = new ArrayList<String>();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -260,9 +243,11 @@ public class MasterClient extends Client {
 	public void discussionGroupCreation() throws IOException {
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
 		byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
-		_broadcastSocketCration.joinGroup(_ipGroupCreation);
-		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _ipGroupCreation, _port);
-		_broadcastSocketCration.send(pck);
+		_ipGroup = InetAddress.getByName("239.255.80.85");
+		_broadcastSocket = new MulticastSocket();
+		_broadcastSocket.joinGroup(_ipGroup);
+		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _ipGroup, _port);
+		_broadcastSocket.send(pck);
 		
 		String ipNeighboor = _acceptedClients.get(0);
 		connectionNeighboor(ipNeighboor/*"192.168.0.13"*/, _port);

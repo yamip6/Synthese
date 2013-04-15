@@ -6,11 +6,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.security.KeyPair;
+
+import utils.Tools;
 
 public class Client {
 	
@@ -53,6 +56,27 @@ public class Client {
 	public final byte[] NOK = new byte[]{0x4f, 0x00};
 	/** Constant of creation group */
 	public final byte[] CREATION = new byte[]{0x2f, 0x00};
+	
+	/**
+	 * Constructor
+	 * @param username : User name of the client
+	 * @throws Exception
+	 */
+	public Client(String username) {
+		try {
+			// Verifying the existence of a key pair
+			// Backup if necessary (if only one file is missing regenerating all)
+			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
+				Tools.keyGenerator();
+									
+		    _username = username;
+			_ipGroup = InetAddress.getByName("239.255.80.84"); // A voir
+			_broadcastSocket = new MulticastSocket();
+			_broadcastSocket.joinGroup(_ipGroup);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Method which permits to connect client/server via socket
