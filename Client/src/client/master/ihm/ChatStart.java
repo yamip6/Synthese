@@ -10,8 +10,8 @@ import java.awt.event.ActionEvent;
 
 @SuppressWarnings("serial")
 public class ChatStart extends JPanel {
-    
-    /**
+
+	/**
      * Constructor
      */
     public ChatStart() {
@@ -26,9 +26,16 @@ public class ChatStart extends JPanel {
         
         JButton btnLaunchServer = new JButton("Start chat");
         btnLaunchServer.addActionListener(new ActionListener() {
+        	@Override
         	public void actionPerformed(ActionEvent e) {
-
-        	}
+				/*try {
+					_master.set_start(true);
+					// On considère un seul serveur !
+					_master.discussionGroupCreation();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}*/
+        	} // actionPerformed()
         });
         btnLaunchServer.setBounds(174, 207, 114, 39);
         add(btnLaunchServer);             

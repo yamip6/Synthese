@@ -100,7 +100,7 @@ public class Config extends JPanel {
 			@Override
 			public void run() {
 				try {
-					_master.Invitation(_groupName.getText());
+					_master.invitation(_groupName.getText());
 				} catch (IOException | InterruptedException e) {
 					e.printStackTrace();
 				}
