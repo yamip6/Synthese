@@ -39,6 +39,8 @@ public class MasterClient extends Client {
 		try {
 			connectionServer(adressServer, port);
 			_acceptedClients = new ArrayList<String>();
+			_broadcastSocket = new MulticastSocket();
+			_broadcastSocket.joinGroup(_ipGroup);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

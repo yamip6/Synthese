@@ -71,12 +71,11 @@ public class Client {
 									
 		    _username = username;
 			_ipGroup = InetAddress.getByName("239.255.80.84"); // A voir
-			_broadcastSocket = new MulticastSocket();
-			_broadcastSocket.joinGroup(_ipGroup);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-	}
+		
+	} // Client()
 
 	/**
 	 * Method which permits to connect client/server via socket

@@ -34,6 +34,8 @@ public class SlaveClient extends Client {
 		super(username);
 		try {
 			_listGroups = new HashMap<String,String>();
+			_broadcastSocket = new MulticastSocket(9999);
+			_broadcastSocket.joinGroup(_ipGroup);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -49,10 +51,12 @@ public class SlaveClient extends Client {
 		byte[] receiveDtg = new byte[1024];
 		byte[] ack = new byte[1024];
 		DatagramPacket invitation, confirm;
-		while(_loop){
+		while(_loop) {
 			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
 			_broadcastSocket.receive(invitation);
+			System.out.println("ss");
 			byte[] grpInvitation = invitation.getData();
+			System.out.println("ss");
 			System.out.println(new String(grpInvitation)); // DEBUG
 			System.out.println("ip : " + invitation.getAddress()); // DEBUG
 			ack = _broadcastSocket.getLocalAddress().getAddress();
