@@ -22,7 +22,7 @@ public class JoinGroup extends JPanel {
         setBackground(Color.WHITE);
         setLayout(null);               
         
-        JTable table = new JTable(new TableModel());
+        JTable table = new JTable(new TableModel()); // Pour Yassine
         table.setBounds(85, 42, 316, 144);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         add(new JScrollPane(table), BorderLayout.CENTER);
@@ -31,11 +31,12 @@ public class JoinGroup extends JPanel {
         btnLaunchServer.addActionListener(new ActionListener() {
         	@Override
         	public void actionPerformed(ActionEvent e) {
+        		System.out.println("PASCAL");
         		try {
         			// MAJ de la JTable dans config
         			// _slave.requestJoinGroup(/*récupérer le 1er element de la ligne sélectionnée (grp)*/, /*récupérer le 2e element de la ligne sélectionnée (ip)*/); // devrait rendre un booleen avec raison echec
-        			SlaveClientGUI.get_slave().requestJoinGroup("toto", "192.168.1.25");
-        			if(false)SlaveClientGUI.get_slave().linkNeighboor("192.168.1.25"); //_slave.get_listGroups().get("ligne sélectionnée");
+        			SlaveClientGUI.get_slave().requestJoinGroup("toto", "192.168.1.110"); // Pas sûr que le groupe serve a quelque chose ici
+        			if(false)SlaveClientGUI.get_slave().linkNeighboor("192.168.1.110"); //_slave.get_listGroups().get("ligne sélectionnée");
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				} 

@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import utils.Utils;
@@ -22,7 +21,6 @@ public class SlaveClient extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<String, String> _listGroups;
-	
 	
 	/** */
 	private volatile boolean _loop = true;
@@ -49,20 +47,15 @@ public class SlaveClient extends Client {
 	public void receiveInvitation() throws IOException{
 		assert(_listGroups != null);
 		byte[] receiveDtg = new byte[1024];
-		byte[] ack = new byte[1024];
-		DatagramPacket invitation, confirm;
+		DatagramPacket invitation;
 		while(_loop) {
 			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
-			_broadcastSocket.receive(invitation); // Bloque ici
+			_broadcastSocket.receive(invitation);
 			byte[] grpInvitation = invitation.getData();
 			System.out.println(invitation.getAddress()); // DEBUG
-			ack = _broadcastSocket.getLocalAddress().getAddress();
-			confirm = new DatagramPacket(ack, ack.length, invitation.getAddress(), invitation.getPort());
-			_broadcastSocket.send(confirm);
+			
 			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation))))
 				_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
-			if (Arrays.equals(grpInvitation, NOK))
-				_loop = false;
 		}
 		
 		@SuppressWarnings("resource") // DEBUG
@@ -79,9 +72,9 @@ public class SlaveClient extends Client {
 	 * @throws IOException
 	 */
 	public void requestJoinGroup(String grp, String ipClientBis) throws IOException{
-		@SuppressWarnings("resource")
-		DatagramSocket tmp = new DatagramSocket();
-		DatagramPacket confirm = new DatagramPacket(OK, 1, InetAddress.getByName(ipClientBis), 9999);
+		System.out.println("ENTREE");
+		DatagramSocket tmp = new DatagramSocket(10000);
+		DatagramPacket confirm = new DatagramPacket(OK, 2, InetAddress.getByName(ipClientBis), 9999);
 		tmp.send(confirm);
 		
 	} // requestJoinGroup()

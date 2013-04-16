@@ -1,6 +1,7 @@
 package client.master;
 
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
@@ -25,8 +26,6 @@ public class MasterClient extends Client {
 	
     /** */
 	private volatile boolean _start = false;
-	/** */
-	private volatile boolean _loop = true;
 
 	/**
 	 * Constructor
@@ -219,20 +218,18 @@ public class MasterClient extends Client {
 		DatagramPacket reception;
 		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, 9999);
 		// The client (bis) will stop the loop when he wants, so the discussion could begin
-		while (_loop) {
-			_broadcastSocket.send(toSend);
-			reception = new DatagramPacket(receiveDtg, receiveDtg.length);
-			if(_start) {
-				toSend = new DatagramPacket(NOK, 2, _ipGroup, 9999);
-				_broadcastSocket.send(toSend);
-				break;
-			}
-			_broadcastSocket.receive(reception);
-			System.out.println(reception.getAddress()); // DEBUG
-	
-			if(Arrays.equals(reception.getData(), OK) && !_acceptedClients.contains(reception.getAddress().getHostAddress()))   
-				_acceptedClients.add(reception.getAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
-		}
+	    _broadcastSocket.send(toSend);
+		 
+	    DatagramSocket caca = new DatagramSocket();
+		reception = new DatagramPacket(receiveDtg, receiveDtg.length);
+		caca.receive(reception);
+		//_broadcastSocket.receive(reception);
+		System.out.println(reception.getAddress()); // DEBUG
+		System.out.println(Arrays.equals(reception.getData(), OK));		
+		if(Arrays.equals(reception.getData(), OK) && !_acceptedClients.contains(reception.getAddress().getHostAddress())) {
+			_acceptedClients.add(reception.getAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
+			System.out.println("Client added");	// DEBUG
+		} 
 		
 	} // Invitation()
 	
@@ -251,7 +248,7 @@ public class MasterClient extends Client {
 		_broadcastSocket.send(pck);
 		
 		String ipNeighboor = _acceptedClients.get(0);
-		connectionNeighboor(ipNeighboor/*"192.168.0.13"*/, _port);
+		connectionNeighboor(ipNeighboor, _port);
 		
 		startServerMode(_port);
 		
@@ -266,5 +263,5 @@ public class MasterClient extends Client {
 		_start = start;
 		
 	} // set_start()
-
+    
 } // ClientMaster
