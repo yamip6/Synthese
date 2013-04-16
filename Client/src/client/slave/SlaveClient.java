@@ -78,11 +78,10 @@ public class SlaveClient extends Client {
 	 * @param ipClientBis the Address IP of the client Master
 	 * @throws IOException
 	 */
-	public void requestJoinGroup(String grp, InetAddress ipClientBis) throws IOException{
-		byte[] answer = new String("invitation true " + grp).getBytes(); // A normaliser avec byte array ok
+	public void requestJoinGroup(String grp, String ipClientBis) throws IOException{
 		@SuppressWarnings("resource")
 		DatagramSocket tmp = new DatagramSocket();
-		DatagramPacket confirm = new DatagramPacket(answer, answer.length, ipClientBis, 9999);
+		DatagramPacket confirm = new DatagramPacket(OK, 1, InetAddress.getByName(ipClientBis), 9999);
 		tmp.send(confirm);
 		
 	} // requestJoinGroup()

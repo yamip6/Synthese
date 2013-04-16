@@ -2,8 +2,10 @@ package client.slave.ihm;
 
 import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -22,14 +24,17 @@ public class JoinGroup extends JPanel {
         
         JTable table = new JTable(new TableModel());
         table.setBounds(85, 42, 316, 144);
-        add(table);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        add(new JScrollPane(table), BorderLayout.CENTER);
         
         JButton btnLaunchServer = new JButton("Join group");
         btnLaunchServer.addActionListener(new ActionListener() {
         	@Override
         	public void actionPerformed(ActionEvent e) {
         		try {
-        			// _slave.requestJoinGroup(grp, ipClientBis); // devrait rendre un booleen avec raison echec
+        			// MAJ de la JTable dans config
+        			// _slave.requestJoinGroup(/*récupérer le 1er element de la ligne sélectionnée (grp)*/, /*récupérer le 2e element de la ligne sélectionnée (ip)*/); // devrait rendre un booleen avec raison echec
+        			SlaveClientGUI.get_slave().requestJoinGroup("toto", "192.168.1.25");
         			if(false)SlaveClientGUI.get_slave().linkNeighboor("192.168.1.25"); //_slave.get_listGroups().get("ligne sélectionnée");
 				} catch (Exception e1) {
 					e1.printStackTrace();

@@ -230,7 +230,7 @@ public class MasterClient extends Client {
 			_broadcastSocket.receive(reception);
 			System.out.println(reception.getAddress()); // DEBUG
 	
-			if (!_acceptedClients.contains(reception.getAddress().getHostAddress()))   
+			if(Arrays.equals(reception.getData(), OK) && !_acceptedClients.contains(reception.getAddress().getHostAddress()))   
 				_acceptedClients.add(reception.getAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring 		
 		}
 		

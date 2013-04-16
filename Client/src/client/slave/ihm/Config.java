@@ -46,6 +46,7 @@ public class Config extends JPanel {
         				public void run() {
         					try {
         						SlaveClientGUI.get_slave().receiveInvitation();
+        						// MAJ du modèle de la JTable de JoinGroup et refresh
         					} catch (IOException e) {
         						e.printStackTrace();
         					}
