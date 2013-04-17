@@ -1,16 +1,13 @@
 package client.slave;
 
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import utils.Utils;
@@ -46,21 +43,22 @@ public class SlaveClient extends Client {
 	 */
 	public void receiveInvitation() throws IOException{
 		assert(_listGroups != null);
+		
 		byte[] receiveDtg = new byte[1024];
-		DatagramPacket invitation;
-		while(_loop) {
+		DatagramPacket invitation, confirm;
+		while(_loop) { // Peut etre qu'il n'y a pas besoin de la boucle !!! ce serait mieux sans !!!
 			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
 			_broadcastSocket.receive(invitation);
 			byte[] grpInvitation = invitation.getData();
 			System.out.println(invitation.getAddress()); // DEBUG
-			
+			confirm = new DatagramPacket(NOK, 2, invitation.getAddress(), invitation.getPort());
+			_broadcastSocket.send(confirm);
 			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation))))
 				_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
+			if (Arrays.equals(grpInvitation, NOK))
+				_loop = false;
 		}
 		
-		@SuppressWarnings("resource") // DEBUG
-		ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(new File("log.txt"))); // DEBUG
-		os.writeObject(get_listGroups()); // DEBUG
 		assert(_listGroups.size() > 0);
 		
 	} // receiveInvitation()
@@ -72,10 +70,9 @@ public class SlaveClient extends Client {
 	 * @throws IOException
 	 */
 	public void requestJoinGroup(String grp, String ipClientBis) throws IOException{
-		System.out.println("ENTREE");
-		DatagramSocket tmp = new DatagramSocket(10000);
+		System.out.println("ENTREE"); // DEBUG
 		DatagramPacket confirm = new DatagramPacket(OK, 2, InetAddress.getByName(ipClientBis), 9999);
-		tmp.send(confirm);
+		_broadcastSocket.send(confirm);
 		
 	} // requestJoinGroup()
 	

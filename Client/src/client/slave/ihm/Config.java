@@ -35,16 +35,11 @@ public class Config extends JPanel {
         add(_username);
         _username.setColumns(10);
         
-        final JLabel lblFind = new JLabel();
-        lblFind.setBounds(101, 107, 246, 53);
-        add(lblFind);
-        
         JButton btnLaunchServer = new JButton("Start");
         btnLaunchServer.addActionListener(new ActionListener() {
         	@Override
         	public void actionPerformed(ActionEvent e) {
         		try {
-        			lblFind.setText("<html>D\u00E9couverte du r\u00E9seau...<br />Recherche de groupes !<html>"); // Marche pas !!!
         			SlaveClientGUI.set_slave(new SlaveClient(_username.getText()));
         		    Thread t = new Thread(new Runnable() {
         				@Override
@@ -58,7 +53,8 @@ public class Config extends JPanel {
         				} // run()
         			});
         		    t.start();
-        		    t.join(30000);
+        		    
+        		    // Mettre le code de JoinGroup dans une nouvelle JFRAME
         		    
         		    SlaveClientGUI._config.setVisible(false);
         		    SlaveClientGUI._jgroup.setVisible(true);

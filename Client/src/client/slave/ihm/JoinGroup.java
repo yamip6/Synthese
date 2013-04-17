@@ -31,7 +31,7 @@ public class JoinGroup extends JPanel {
         btnLaunchServer.addActionListener(new ActionListener() {
         	@Override
         	public void actionPerformed(ActionEvent e) {
-        		System.out.println("PASCAL");
+        		System.out.println("PASCAL"); // DEBUG
         		try {
         			// MAJ de la JTable dans config
         			// _slave.requestJoinGroup(/*récupérer le 1er element de la ligne sélectionnée (grp)*/, /*récupérer le 2e element de la ligne sélectionnée (ip)*/); // devrait rendre un booleen avec raison echec
