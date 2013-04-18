@@ -3,6 +3,7 @@ package client.slave;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ public class SlaveClient extends Client {
 	private HashMap<String, String> _listGroups;
 	
 	private Socket _tmpSocket;
+	private ServerSocket _tmpListenSocket;
 	private OutputStream _tmpOut;
 	private InputStream _tmpIn;
 	/**
@@ -66,7 +68,7 @@ public class SlaveClient extends Client {
 	 * @throws IOException
 	 */
 	public void requestJoinGroup(String grp, String ipClientBis) throws IOException{
-		System.out.println("ENTREE"); // DEBUG)
+		System.out.println("ENTREE"); // DEBUG
 		_tmpSocket = new Socket(ipClientBis, 10000);
 		_tmpOut = _tmpSocket.getOutputStream();
 		_tmpOut.write(OK);
@@ -82,11 +84,22 @@ public class SlaveClient extends Client {
 	 */
 	public void linkNeighboor(String ipClientBis) throws Exception {
 		System.out.println("Je rentre ????");
+		/*
+		 byte[] receiveDtg = new byte[1024];
+		DatagramPacket pck = new DatagramPacket(receiveDtg, receiveDtg.length);
+		_ipGroup = InetAddress.getByName("239.255.80.85");
+		_broadcastSocket = new MulticastSocket(9999);
+		_broadcastSocket.joinGroup(_ipGroup);
+		_broadcastSocket.receive(pck);
+		 */
+		_tmpListenSocket = new ServerSocket(11111);
+		_tmpSocket = _tmpListenSocket.accept();
 		_tmpIn = _tmpSocket.getInputStream();
 		byte[] data = new byte[1024];
 		_tmpIn.read(data);
 		System.out.println("effez");
-		ArrayList<String> listIps = Utils.byteArrayToList(data);
+		System.out.println(data.length);
+		ArrayList<String> listIps = Utils.byteArrayToList(data); // DERNIERE ERREUR DU PROGRAMME !!!!
 		int pos;
 		System.out.println(InetAddress.getLocalHost().getHostAddress());
 		// The client searchs its ip to determinate the ip following its own ip :
@@ -99,6 +112,7 @@ public class SlaveClient extends Client {
 		
 		startServerMode(_port);
 		_tmpSocket.close();
+		_tmpListenSocket.close();
 		
 	} // linkNeighboor()
 	

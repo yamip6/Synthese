@@ -31,6 +31,8 @@ public class MasterClient extends Client {
     private Socket _tmpSocket;
     private InputStream _tmpIn;
     private OutputStream _tmpOut;
+    
+    private volatile boolean _loop = true;
 
 	/**
 	 * Constructor
@@ -225,22 +227,31 @@ public class MasterClient extends Client {
 		
 	} // Invitation()
 	
-	public void receiveClient() throws IOException {
-		System.out.println("aaa");
+	public void receiveClient() throws IOException { // Si la boucle marche pas on fera un timeout
 		byte[] data = new byte[2];
+		/*
+		byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
+		_ipGroup = InetAddress.getByName("239.255.80.85");
+		_broadcastSocket = new MulticastSocket();
+		_broadcastSocket.joinGroup(_ipGroup);
+		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _ipGroup, _port);
+		_broadcastSocket.send(pck);
+		 */
 		
 		_tmpListenSocket = new ServerSocket(10000);
-		_tmpSocket = _tmpListenSocket.accept();
-		_tmpIn = _tmpSocket.getInputStream();
-		_tmpIn.read(data);
 		
-		System.out.println(_tmpSocket.getInetAddress()); // DEBUG
-		System.out.println(Arrays.equals(data, OK));	// DEBUG	
-		if(Arrays.equals(data, OK) && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
-			_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
-			System.out.println("Client added");	// DEBUG
-		} 
-		// listenSocket.close()
+		while(_loop) {
+			System.out.println("aaa"); // DEBUG
+			_tmpSocket = _tmpListenSocket.accept();
+			_tmpIn = _tmpSocket.getInputStream();
+			_tmpIn.read(data);
+			System.out.println(_tmpSocket.getInetAddress()); // DEBUG
+			System.out.println(Arrays.equals(data, OK));	// DEBUG	
+			if(Arrays.equals(data, OK) && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
+				_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
+				System.out.println("Client added");	// DEBUG
+			} 
+		}
 	}
 
 	/**
@@ -251,9 +262,13 @@ public class MasterClient extends Client {
 	public void discussionGroupCreation() throws IOException {
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
 		byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
-		_tmpOut = _tmpSocket.getOutputStream();
-		_tmpOut.write(toSend);
-		_tmpOut.flush();
+		for(int i = 0; i < _acceptedClients.size()-1; ++i) {
+			System.out.println(_acceptedClients.get(i));
+			_tmpSocket = new Socket(_acceptedClients.get(i), 11111);
+			_tmpOut = _tmpSocket.getOutputStream();
+			_tmpOut.write(toSend);
+			_tmpOut.flush();
+		}
 		String ipNeighboor = _acceptedClients.get(0);
 		System.out.println(ipNeighboor);
 		startServerMode(_port);
@@ -262,5 +277,13 @@ public class MasterClient extends Client {
 		_tmpSocket.close();
 		_tmpListenSocket.close();
 	} // discussionGroupCreation()
-    
+
+	public boolean is_loop() {
+		return _loop;
+	}
+
+	public void set_loop(boolean loop) {
+		_loop = loop;
+	}
+	
 } // ClientMaster
