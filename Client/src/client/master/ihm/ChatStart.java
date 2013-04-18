@@ -34,7 +34,7 @@ public class ChatStart extends JPanel {
         		    public void run() {
         				try {
         					// On considère un seul serveur !
-        					if(false)MasterClientGUI.get_master().discussionGroupCreation();
+        					MasterClientGUI.get_master().discussionGroupCreation();
         				} catch (IOException e) {
         					e.printStackTrace();
         				}	

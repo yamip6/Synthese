@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import utils.Crypto;
 import utils.Tools;
@@ -25,6 +26,11 @@ public class MasterClient extends Client {
 	
 	/** Server public key */
     private byte[] _publicKey;
+    
+    private ServerSocket _tmpListenSocket;
+    private Socket _tmpSocket;
+    private InputStream _tmpIn;
+    private OutputStream _tmpOut;
 
 	/**
 	 * Constructor
@@ -223,16 +229,15 @@ public class MasterClient extends Client {
 		System.out.println("aaa");
 		byte[] data = new byte[2];
 		
-		@SuppressWarnings("resource")
-		ServerSocket listenSocket = new ServerSocket(10000);
-		Socket socket = listenSocket.accept();
-		InputStream inClient = socket.getInputStream();
-		inClient.read(data);
+		_tmpListenSocket = new ServerSocket(10000);
+		_tmpSocket = _tmpListenSocket.accept();
+		_tmpIn = _tmpSocket.getInputStream();
+		_tmpIn.read(data);
 		
-		System.out.println(socket.getInetAddress()); // DEBUG
+		System.out.println(_tmpSocket.getInetAddress()); // DEBUG
 		System.out.println(Arrays.equals(data, OK));	// DEBUG	
-		if(Arrays.equals(data, OK) && !_acceptedClients.contains(socket.getInetAddress().getHostAddress())) {
-			_acceptedClients.add(socket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
+		if(Arrays.equals(data, OK) && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
+			_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
 			System.out.println("Client added");	// DEBUG
 		} 
 		// listenSocket.close()
@@ -246,17 +251,16 @@ public class MasterClient extends Client {
 	public void discussionGroupCreation() throws IOException {
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
 		byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
-		_ipGroup = InetAddress.getByName("239.255.80.85");
-		_broadcastSocket = new MulticastSocket();
-		_broadcastSocket.joinGroup(_ipGroup);
-		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _ipGroup, _port);
-		_broadcastSocket.send(pck);
-		
+		_tmpOut = _tmpSocket.getOutputStream();
+		_tmpOut.write(toSend);
+		_tmpOut.flush();
 		String ipNeighboor = _acceptedClients.get(0);
+		System.out.println(ipNeighboor);
+		startServerMode(_port);
 		connectionNeighboor(ipNeighboor, _port);
 		
-		startServerMode(_port);
-		
+		_tmpSocket.close();
+		_tmpListenSocket.close();
 	} // discussionGroupCreation()
     
 } // ClientMaster

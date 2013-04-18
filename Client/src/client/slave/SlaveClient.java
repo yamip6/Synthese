@@ -6,6 +6,7 @@ import java.net.MulticastSocket;
 import java.net.Socket;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.util.ArrayList;
@@ -20,6 +21,9 @@ public class SlaveClient extends Client {
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<String, String> _listGroups;
 	
+	private Socket _tmpSocket;
+	private OutputStream _tmpOut;
+	private InputStream _tmpIn;
 	/**
 	 * Constructor
 	 */
@@ -62,14 +66,12 @@ public class SlaveClient extends Client {
 	 * @throws IOException
 	 */
 	public void requestJoinGroup(String grp, String ipClientBis) throws IOException{
-		System.out.println("ENTREE"); // DEBUG
-		@SuppressWarnings("resource")
-		Socket clientSocket = new Socket(ipClientBis, 10000);
-		OutputStream outServer = clientSocket.getOutputStream();
-		outServer.write(OK);
-		outServer.flush();
+		System.out.println("ENTREE"); // DEBUG)
+		_tmpSocket = new Socket(ipClientBis, 10000);
+		_tmpOut = _tmpSocket.getOutputStream();
+		_tmpOut.write(OK);
+		_tmpOut.flush();
 		System.out.println("Yassine");
-		//clientSocket.close();
 		
 	} // requestJoinGroup()
 	
@@ -79,17 +81,16 @@ public class SlaveClient extends Client {
 	 * @throws Exception 
 	 */
 	public void linkNeighboor(String ipClientBis) throws Exception {
-		byte[] receiveDtg = new byte[1024];
-		DatagramPacket pck = new DatagramPacket(receiveDtg, receiveDtg.length);
-		_ipGroup = InetAddress.getByName("239.255.80.85");
-		_broadcastSocket = new MulticastSocket(9999);
-		_broadcastSocket.joinGroup(_ipGroup);
-		_broadcastSocket.receive(pck);
-		ArrayList<String> listIps = Utils.byteArrayToList(receiveDtg);
+		System.out.println("Je rentre ????");
+		_tmpIn = _tmpSocket.getInputStream();
+		byte[] data = new byte[1024];
+		_tmpIn.read(data);
+		System.out.println("effez");
+		ArrayList<String> listIps = Utils.byteArrayToList(data);
 		int pos;
-		pos = (listIps.indexOf(InetAddress.getLocalHost()));
+		System.out.println(InetAddress.getLocalHost().getHostAddress());
 		// The client searchs its ip to determinate the ip following its own ip :
-		if((pos = (listIps.indexOf(InetAddress.getLocalHost()))) > -1){
+		if((pos = (listIps.indexOf(InetAddress.getLocalHost().getHostAddress()))) > -1){
 			connectionNeighboor(listIps.get(pos+1), _port);
 			System.out.println("Two clients linked !!!");  // DEBUG
 		}
@@ -97,6 +98,7 @@ public class SlaveClient extends Client {
 			throw new Exception("Ip doesn't exist in the list of accepted clients...");
 		
 		startServerMode(_port);
+		_tmpSocket.close();
 		
 	} // linkNeighboor()
 	
