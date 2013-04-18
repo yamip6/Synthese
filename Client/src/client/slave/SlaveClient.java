@@ -3,11 +3,12 @@ package client.slave;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.Socket;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import utils.Utils;
@@ -18,9 +19,6 @@ public class SlaveClient extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<String, String> _listGroups;
-	
-	/** */
-	private volatile boolean _loop = true;
 	
 	/**
 	 * Constructor
@@ -45,19 +43,13 @@ public class SlaveClient extends Client {
 		assert(_listGroups != null);
 		
 		byte[] receiveDtg = new byte[1024];
-		DatagramPacket invitation, confirm;
-		while(_loop) { // Peut etre qu'il n'y a pas besoin de la boucle !!! ce serait mieux sans !!!
-			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
-			_broadcastSocket.receive(invitation);
-			byte[] grpInvitation = invitation.getData();
-			System.out.println(invitation.getAddress()); // DEBUG
-			confirm = new DatagramPacket(NOK, 2, invitation.getAddress(), invitation.getPort());
-			_broadcastSocket.send(confirm);
-			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation))))
-				_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
-			if (Arrays.equals(grpInvitation, NOK))
-				_loop = false;
-		}
+		DatagramPacket invitation;
+		invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
+		_broadcastSocket.receive(invitation);
+		byte[] grpInvitation = invitation.getData();
+		System.out.println(invitation.getAddress()); // DEBUG
+		if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation))))
+			_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
 		
 		assert(_listGroups.size() > 0);
 		
@@ -71,8 +63,13 @@ public class SlaveClient extends Client {
 	 */
 	public void requestJoinGroup(String grp, String ipClientBis) throws IOException{
 		System.out.println("ENTREE"); // DEBUG
-		DatagramPacket confirm = new DatagramPacket(OK, 2, InetAddress.getByName(ipClientBis), 9999);
-		_broadcastSocket.send(confirm);
+		@SuppressWarnings("resource")
+		Socket clientSocket = new Socket(ipClientBis, 10000);
+		OutputStream outServer = clientSocket.getOutputStream();
+		outServer.write(OK);
+		outServer.flush();
+		System.out.println("Yassine");
+		//clientSocket.close();
 		
 	} // requestJoinGroup()
 	

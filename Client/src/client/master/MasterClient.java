@@ -3,12 +3,15 @@ package client.master;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import utils.Crypto;
 import utils.Tools;
@@ -22,11 +25,6 @@ public class MasterClient extends Client {
 	
 	/** Server public key */
     private byte[] _publicKey;
-	
-    /** */
-	private volatile boolean _start = false;
-	/** */
-	private volatile boolean _loop = true;
 
 	/**
 	 * Constructor
@@ -214,30 +212,31 @@ public class MasterClient extends Client {
 	 */
 	public void invitation(String nameGroup) throws IOException, InterruptedException {
 		byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation we can use a key word as invitation !
-		byte[] receiveDtg = new byte[1024]; // answers from interested clients
 
-		DatagramPacket reception;
 		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, 9999);
-		// The client (bis) will stop the loop when he wants, so the discussion could begin
-		while (_loop) {
-			_broadcastSocket.send(toSend);
-			reception = new DatagramPacket(receiveDtg, receiveDtg.length);
-			if(_start) {
-				toSend = new DatagramPacket(NOK, 2, _ipGroup, 9999);
-				_broadcastSocket.send(toSend);
-				break;
-			}
-			_broadcastSocket.receive(reception);
-			
-			System.out.println(reception.getAddress()); // DEBUG
-			System.out.println(Arrays.equals(reception.getData(), OK));	// DEBUG	
-			if(Arrays.equals(reception.getData(), OK) && !_acceptedClients.contains(reception.getAddress().getHostAddress())) {
-				_acceptedClients.add(reception.getAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
-				System.out.println("Client added");	// DEBUG
-			} 
-		}
+
+	    _broadcastSocket.send(toSend);
 		
 	} // Invitation()
+	
+	public void receiveClient() throws IOException {
+		System.out.println("aaa");
+		byte[] data = new byte[2];
+		
+		@SuppressWarnings("resource")
+		ServerSocket listenSocket = new ServerSocket(10000);
+		Socket socket = listenSocket.accept();
+		InputStream inClient = socket.getInputStream();
+		inClient.read(data);
+		
+		System.out.println(socket.getInetAddress()); // DEBUG
+		System.out.println(Arrays.equals(data, OK));	// DEBUG	
+		if(Arrays.equals(data, OK) && !_acceptedClients.contains(socket.getInetAddress().getHostAddress())) {
+			_acceptedClients.add(socket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
+			System.out.println("Client added");	// DEBUG
+		} 
+		// listenSocket.close()
+	}
 
 	/**
 	 * Distribution of the adresses ips to the clients slave from the client master. Moreover,
@@ -259,15 +258,5 @@ public class MasterClient extends Client {
 		startServerMode(_port);
 		
 	} // discussionGroupCreation()
-	
-	public boolean is_start() {
-		return _start;
-		
-	} // is_start()
-
-	public void set_start(boolean start) {
-		_start = start;
-		
-	} // set_start()
     
 } // ClientMaster

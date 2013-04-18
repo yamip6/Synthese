@@ -54,8 +54,6 @@ public class Config extends JPanel {
         			});
         		    t.start();
         		    
-        		    // Mettre le code de JoinGroup dans une nouvelle JFRAME
-        		    
         		    SlaveClientGUI._config.setVisible(false);
         		    SlaveClientGUI._jgroup.setVisible(true);
 				} catch (Exception e1) {

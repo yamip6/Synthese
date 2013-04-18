@@ -82,6 +82,7 @@ public class Config extends JPanel {
 						public void run() {
 							try {
 								MasterClientGUI.get_master().invitation(_groupName.getText());
+								MasterClientGUI.get_master().receiveClient();
 							} catch (IOException | InterruptedException e) {
 								e.printStackTrace();
 							}
