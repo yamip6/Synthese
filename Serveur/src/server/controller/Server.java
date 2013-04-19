@@ -17,7 +17,7 @@ import utils.Crypto;
 import utils.Tools;
 import utils.Utils;
 
-public class Server {
+public class Server implements Runnable {
 
 	/** Listen socket of the server */
 	private ServerSocket _listenSocket;
@@ -34,6 +34,7 @@ public class Server {
     private byte[] _publicKey;
     /** Server keypair */
     private KeyPair _keyPair;
+    private Thread _clientThread;
 	
 	/** Constant of validation during communication*/
 	public final byte[] OK = new byte[]{0x4f, 0x11};
@@ -50,6 +51,7 @@ public class Server {
 				if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
 					Tools.keyGenerator();
 			startServer(port);
+			_clientThread = new Thread(this);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -62,18 +64,18 @@ public class Server {
 	 * @return The connection socket of cleint/server
 	 * @throws IOException
 	 */
-	public Socket startServer(int port) throws IOException {
+	public void startServer(int port) throws IOException {
 		_listenSocket = new ServerSocket(port);
-		_clientSocket = _listenSocket.accept();
-		_in = _clientSocket.getInputStream(); 
-		_out = _clientSocket.getOutputStream();  
-		return _clientSocket;
 		
 	} // startServer()
 	
 	
-	public void service() throws Exception {
+	public void run() {
+		try {
 		while(true) {
+			_clientSocket = _listenSocket.accept();
+			_in = _clientSocket.getInputStream(); 
+			_out = _clientSocket.getOutputStream(); 
 			byte[] request = receive(2);
 			if(Arrays.equals(request, CREATION)) {
 				identityControl();
@@ -96,6 +98,15 @@ public class Server {
 				}
 			}
         }
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				disconnection();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		
 	} // service ()
 	
@@ -247,5 +258,15 @@ public class Server {
 		return data;
 		
 	} // receive()
+
+	public Thread get_clientThread() {
+		return _clientThread;
+	}
+
+	public void set_clientThread(Thread clientThread) {
+		_clientThread = clientThread;
+	}
+	
+	
 
 } // Server

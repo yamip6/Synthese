@@ -9,6 +9,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import server.controller.Server;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
@@ -18,6 +20,7 @@ import java.awt.event.WindowEvent;
 public class ServerGUI extends JFrame {
     /** Graphic panel to configure the server (port) */
     protected static Config _config;
+    private static Server _server;
     
     /**
      * Constructor
@@ -63,7 +66,21 @@ public class ServerGUI extends JFrame {
         
     } // ServerGUI() 
     
-    /**
+    
+    
+    public static Server get_server() {
+		return _server;
+	}
+
+
+
+	public static void set_server(Server server) {
+		_server = server;
+	}
+
+
+
+	/**
      * Method which permits to launch the server application
      * @param args
      */

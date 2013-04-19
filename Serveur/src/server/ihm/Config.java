@@ -40,9 +40,8 @@ public class Config extends JPanel {
         	@Override
         	public void actionPerformed(ActionEvent e) {
         		try {
-        			Server s = new Server(Integer.parseInt(_port.getText()));
-					s.service();
-					s.disconnection();
+        			ServerGUI.set_server(new Server(Integer.parseInt(_port.getText())));
+        			ServerGUI.get_server().get_clientThread().start();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
