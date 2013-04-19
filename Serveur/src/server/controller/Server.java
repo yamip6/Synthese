@@ -34,6 +34,7 @@ public class Server implements Runnable {
     private byte[] _publicKey;
     /** Server keypair */
     private KeyPair _keyPair;
+    /** Client's thread */
     private Thread _clientThread;
 	
 	/** Constant of validation during communication*/
@@ -43,7 +44,7 @@ public class Server implements Runnable {
 	/** Constant of creation group */
 	public final byte[] CREATION = new byte[]{0x2f, 0x00};
 	
-	public Server(int port){
+	public Server (int port) {
 		try {
 			_groupList = new ArrayList<String>();
 			// Verifying the existence of a key pair
@@ -64,40 +65,42 @@ public class Server implements Runnable {
 	 * @return The connection socket of cleint/server
 	 * @throws IOException
 	 */
-	public void startServer(int port) throws IOException {
+	public void startServer (int port) throws IOException {
 		_listenSocket = new ServerSocket(port);
 		
-	} // startServer()
+	} // startServer ()
 	
-	
-	public void run() {
+	@Override
+	public void run () {
 		try {
-		while(true) {
-			_clientSocket = _listenSocket.accept();
-			_in = _clientSocket.getInputStream(); 
-			_out = _clientSocket.getOutputStream(); 
-			byte[] request = receive(2);
-			if(Arrays.equals(request, CREATION)) {
-				identityControl();
+			while(true) {
+				_clientSocket = _listenSocket.accept();
+				_in = _clientSocket.getInputStream(); 
+				_out = _clientSocket.getOutputStream(); 
 				
-				byte[] size = receive(4);
-				byte[] username = receive(Utils.byteArrayToInt(size));
-				size = receive(4);
-				byte[] grpName = receive(Utils.byteArrayToInt(size));
-				System.out.println("Received from client : " + new String(grpName)); // DEBUG
-				size = receive(4);
-				byte[] signature = receive(Utils.byteArrayToInt(size));
-				boolean result = Tools.verifSign(Utils.concatenateByteArray(username, grpName), _publicKey, signature);
-				if(result && !_groupList.contains(new String(grpName))) { // Et test authentification
-					_groupList.add(new String(grpName));
-					send(OK); // On chiffre la réponse avec le mot de passe de la bdd, si lz client arrive a déchiffrer c'est qu'il s'est authentifier
-		            send(Utils.intToByteArray(grpName.length, 4));
-		            send(grpName); // Pas de controle d'intégrité
-				} else {
-					send(NOK); // + Raison Echec - Pas de controle d'intégrité
+				byte[] request = receive(2);
+				
+				if(Arrays.equals(request, CREATION)) { // Création
+					identityControl();
+					
+					byte[] size = receive(4);
+					byte[] username = receive(Utils.byteArrayToInt(size));
+					size = receive(4);
+					byte[] grpName = receive(Utils.byteArrayToInt(size));
+					System.out.println("Received from client : " + new String(grpName)); // DEBUG
+					size = receive(4);
+					byte[] signature = receive(Utils.byteArrayToInt(size));
+					boolean result = Tools.verifSign(Utils.concatenateByteArray(username, grpName), _publicKey, signature);
+					if(result && !_groupList.contains(new String(grpName))) { // Et test authentification
+						_groupList.add(new String(grpName));
+						send(OK); // On chiffre la réponse avec le mot de passe de la bdd, si lz client arrive a déchiffrer c'est qu'il s'est authentifier
+			            send(Utils.intToByteArray(grpName.length, 4));
+			            send(grpName); // Pas de controle d'intégrité
+					} else {
+						send(NOK); // + Raison Echec - Pas de controle d'intégrité
+					}
 				}
-			}
-        }
+	        }
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -108,14 +111,14 @@ public class Server implements Runnable {
 			}
 		}
 		
-	} // service ()
+	} // run ()
 	
 	/**
 	 * Method which realize the identity control between server and client bis
 	 * @throws Exception
 	 */
-	public void identityControl() throws Exception {
-		// Receipt of hash of identity control
+	public void identityControl () throws Exception {
+		// Receipt hash of identity control
 		byte[] tailleHash = receive(1);
 		byte[] hash = receive(Utils.byteArrayToInt(tailleHash));
 		System.out.println("Réception du hash : " + Utils.byteArrayToHexString(hash)); // DEBUG
@@ -171,13 +174,13 @@ public class Server implements Runnable {
 		    	System.out.println("La vérification a échouée."); // DEBUG
 		}	
 		
-	} // identityControl()
+	} // identityControl ()
 	
 	/**
 	 * Method which permit to change role during the identity control
 	 * @throws Exception
 	 */
-	public void changeRole() throws Exception {
+	public void changeRole () throws Exception {
 		// MD5 hash of the public key
 		byte[] hash = Tools.hashFile("keys/public.key");
 		// Sending hash
@@ -195,7 +198,7 @@ public class Server implements Runnable {
 			byte[] challengeR = receive(16);
 			System.out.println("Réception du challenge (réception NOK)."); // DEBUG
 
-			// Chargement de votre clef publique
+			// Loading your public key
 			System.out.println("Charmement de votre paire de clefs."); // DEBUG
 			_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
 
@@ -225,25 +228,25 @@ public class Server implements Runnable {
 				send(NOK);
 			}
 		}
-	} // changeRole()
+	} // changeRole ()
 	
-	public void disconnection() throws IOException {
+	public void disconnection () throws IOException {
 		// Closing the sockets
 		_clientSocket.close();
 		_listenSocket.close();
 		
-	} // disconnection()
+	} // disconnection ()
 	
 	/**
 	 * Method which permits to send byte array
 	 * @param message : Byte array to send
 	 * @throws IOException
 	 */
-	public void send(byte[] message) throws IOException {
+	public void send (byte[] message) throws IOException {
 		_out.write(message);
 		_out.flush();
 		
-	} // send()
+	} // send ()
 
 	/**
 	 * Méthod which permits to receive byte array
@@ -252,21 +255,20 @@ public class Server implements Runnable {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public byte[] receive(int size) throws IOException, ClassNotFoundException {
+	public byte[] receive (int size) throws IOException, ClassNotFoundException {
 		byte[] data = new byte[size];
 		_in.read(data); // Reading the inputstream
 		return data;
 		
-	} // receive()
+	} // receive ()
 
-	public Thread get_clientThread() {
+	/**
+	 * 
+	 * @return
+	 */
+	public Thread get_clientThread () {
 		return _clientThread;
-	}
-
-	public void set_clientThread(Thread clientThread) {
-		_clientThread = clientThread;
-	}
-	
-	
+		
+	} // get_clientThread ()
 
 } // Server

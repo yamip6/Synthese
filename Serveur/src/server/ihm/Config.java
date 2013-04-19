@@ -20,36 +20,37 @@ public class Config extends JPanel {
     /**
      * Constructor
      */
-    public Config() {
+    public Config () {
         setFocusable(true);
         requestFocusInWindow(true);
         setBackground(Color.WHITE);
         setLayout(null);
         
         JLabel lblListeningPort = new JLabel("Listening port:");
-        lblListeningPort.setBounds(101, 103, 85, 14);
+        lblListeningPort.setBounds(109, 53, 107, 14);
         add(lblListeningPort);
         
         _port = new JTextField();
-        _port.setBounds(207, 100, 114, 20);
+        _port.setBounds(215, 50, 114, 20);
         add(_port);
         _port.setColumns(10);
         
         JButton btnLaunchServer = new JButton("Launch server");
         btnLaunchServer.addActionListener(new ActionListener() {
         	@Override
-        	public void actionPerformed(ActionEvent e) {
+        	public void actionPerformed (ActionEvent e) {
         		try {
         			ServerGUI.set_server(new Server(Integer.parseInt(_port.getText())));
         			ServerGUI.get_server().get_clientThread().start();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-        	} // actionPerformed()
+        		
+        	} // actionPerformed ()
         });
-        btnLaunchServer.setBounds(171, 153, 114, 39);
+        btnLaunchServer.setBounds(159, 155, 120, 61);
         add(btnLaunchServer); 
         
-    } // Config()
+    } // Config ()
     
 } // Config

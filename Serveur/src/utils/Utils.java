@@ -16,7 +16,7 @@ public class Utils {
 	 * @param buffer
 	 * @return
 	 */
-	public static String byteArrayToHexString(byte[] buffer) {
+	public static String byteArrayToHexString (byte[] buffer) {
 		String hex = "";
 		if (buffer.length == 0)
 			return hex;
@@ -26,7 +26,7 @@ public class Utils {
 
 		return hex;	
 		
-	} // byteArrayToHexString()
+	} // byteArrayToHexString ()
 	
 	/**
 	 * Method which convert int to byte array
@@ -34,7 +34,7 @@ public class Utils {
 	 * @param octet : Number of bytes in the byte array result
 	 * @return The byte array
 	 */
-    public static final byte[] intToByteArray(int value, int octet) {
+    public static final byte[] intToByteArray (int value, int octet) {
     	switch(octet) {
     	    case 4 :
     	    	return new byte[] {(byte)(value >>> 24), (byte)(value >> 16 & 0xff), (byte)(value >> 8 & 0xff), (byte)(value & 0xff)};
@@ -46,14 +46,14 @@ public class Utils {
     	    	return null;
     	}
     	
-    } // intToByteArray()
+    } // intToByteArray ()
     
     /**
      * Method to convert a byte array to an integer value
      * @param b : Byte array to convert
      * @return Integer corresponding
      */
-    public static final int byteArrayToInt(byte[] b) {
+    public static final int byteArrayToInt (byte[] b) {
         int value = 0;   
         for(int i = 0; i < b.length; i++) {
             value = value << 8;
@@ -61,7 +61,7 @@ public class Utils {
         }
         return value;
         
-    } // byteArrayToInt()
+    } // byteArrayToInt ()
     
     /**
      * Method to concatenate 2 byte arrays
@@ -69,13 +69,13 @@ public class Utils {
      * @param b : Second byte array
      * @return The byte array composed of a followed by b
      */
-	public static byte[] concatenateByteArray(byte[] a, byte[] b) {
+	public static byte[] concatenateByteArray (byte[] a, byte[] b) {
 		byte[] c = new byte[a.length + b.length];
 		System.arraycopy(a, 0, c, 0, a.length);
 		System.arraycopy(b, 0, c, a.length, b.length);
 		return c;
 		
-	} // concatenateByteArray()	
+	} // concatenateByteArray ()	
 	
 	/**
 	 * 
@@ -83,12 +83,12 @@ public class Utils {
 	 * @param file
 	 * @throws IOException
 	 */
-	public static void saveBuffer(byte[] buffer, File file) throws IOException {
+	public static void saveBuffer (byte[] buffer, File file) throws IOException {
 		OutputStream os = new FileOutputStream(file);
 		os.write(buffer);
 		os.close();
 		
-	} // saveBuffer()
+	} // saveBuffer ()
 	
 	/**
 	 * 
@@ -96,14 +96,14 @@ public class Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static byte[] readBuffer(File file) throws IOException {
+	public static byte[] readBuffer (File file) throws IOException {
 		InputStream is = new FileInputStream(file);
 		byte result[] = new byte[(int) file.length()];
 		is.read(result);
 		is.close();
 		return result;
 
-	} // readBuffer()
+	} // readBuffer ()
 	
 	/**
 	 * 
@@ -111,10 +111,10 @@ public class Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static char[] readPassword(String message) throws IOException {
+	public static char[] readPassword (String message) throws IOException {
 		String pass = JOptionPane.showInputDialog(null, message, "Asking pass", JOptionPane.QUESTION_MESSAGE);
 		return pass.toCharArray();
 		
-	} // readPassword()
+	} // readPassword ()
 	
 } // Utils
