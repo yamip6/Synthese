@@ -9,12 +9,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import client.master.MasterClient;
-
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
+import client.master.MasterClient;
 
 @SuppressWarnings("serial")
 public class MasterClientGUI extends JFrame {
@@ -25,19 +25,11 @@ public class MasterClientGUI extends JFrame {
     
     /** The master client */
 	private static MasterClient _master;
-    
-    public static MasterClient get_master() {
-		return _master;
-	}
-
-	public static void set_master(MasterClient master) {
-	    _master = master;
-	}
 
 	/**
      * Constructor
      */
-    public MasterClientGUI() {
+    public MasterClientGUI () {
         try { // Forcing the use of the system's look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
@@ -66,28 +58,48 @@ public class MasterClientGUI extends JFrame {
         JMenuItem mntmQuitter = new JMenuItem("Exit");
         mntmQuitter.addActionListener(new ActionListener() {
         	@Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed (ActionEvent e) {
                 int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Stopping the application", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if(option == JOptionPane.OK_OPTION) System.exit(0);
-            } // actionPerformed()
+                
+            } // actionPerformed ()
         });
         Menu.add(mntmQuitter);
         
         addWindowListener(new WindowAdapter() {
         	@Override
-            public void windowClosing(WindowEvent e) {
+            public void windowClosing (WindowEvent e) {
             	int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Stopping the application", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if(option == JOptionPane.OK_OPTION) System.exit(0);
-            } // windowClosing()
+                
+            } // windowClosing ()
         });
         
-    } // MasterClientGUI() 
+    } // MasterClientGUI () 
     
+    /**
+     * 
+     * @return
+     */
+    public static MasterClient get_master () {
+		return _master;
+		
+	} // get_master ()
+
+    /**
+     * 
+     * @param master
+     */
+	public static void set_master (MasterClient master) {
+	    _master = master;
+	    
+	} // set_master ()
+	
     /**
      * Method which permits to launch the client bis application
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main (String[] args) {
     	MasterClientGUI fr = new MasterClientGUI();
         fr.setTitle("Secured exchange group");
         fr.setSize(500, 350);
@@ -96,6 +108,6 @@ public class MasterClientGUI extends JFrame {
         fr.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         fr.setVisible(true);
         
-    } // main()
+    } // main ()
     
 } // MasterClientGUI

@@ -6,13 +6,13 @@ import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import utils.Crypto;
 import utils.Tools;
@@ -27,11 +27,16 @@ public class MasterClient extends Client {
 	/** Server public key */
     private byte[] _publicKey;
     
+    /** Temporary listen socket with clients */
     private ServerSocket _tmpListenSocket;
+    /** Temporary socket with clients */
     private Socket _tmpSocket;
+    /** Socket input stream with client */
     private InputStream _tmpIn;
+    /** Socket output stream with client */
     private OutputStream _tmpOut;
     
+    /** */
     private volatile boolean _loop = true;
 
 	/**
@@ -40,8 +45,9 @@ public class MasterClient extends Client {
 	 * @param portServer is the port of the server         
 	 * @param username is the user name of the client bis    
 	 */
-	public MasterClient(String adressServer, int port, String username) {
+	public MasterClient (String adressServer, int port, String username) {
 		super(username);
+		
 		try {
 			connectionServer(adressServer, port);
 			_acceptedClients = new ArrayList<String>();
@@ -51,14 +57,14 @@ public class MasterClient extends Client {
 			e.printStackTrace();
 		}
 
-	} // MasterClient()
+	} // MasterClient ()
 
 	/**
 	 * Used by a client to request a creation of a group to the server
 	 * @param nameGroup is the name of the group the client wants
 	 * @throws Exception 
 	 */
-	public void requestGroupCreation(String nameGroup) throws Exception {
+	public void requestGroupCreation (String nameGroup) throws Exception {
 		send(CREATION);
 		
 		_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
@@ -73,7 +79,7 @@ public class MasterClient extends Client {
 		send(Utils.intToByteArray(signature.length, 4));
 		send(signature);
 		
-	} // requestGroupCreation()
+	} // requestGroupCreation ()
 
 	/**
 	 * Used by the client to know the response of the group's creation from the server
@@ -82,7 +88,7 @@ public class MasterClient extends Client {
 	 * @throws IOException
 	 * @throws ClassNotFoundException 
 	 */
-	public Boolean responseGroupCreation()throws IOException, ClassNotFoundException {
+	public Boolean responseGroupCreation ()throws IOException, ClassNotFoundException {
 		byte[] response = receive(2);
 		if(Arrays.equals(response, OK)) {
 		    byte[] size = receive(4);
@@ -97,13 +103,13 @@ public class MasterClient extends Client {
 		}
 		return false;
 		
-	} // responseGroupCreation()
+	} // responseGroupCreation ()
 	
 	/**
 	 * Method which realize the identity control between clientBis and server
 	 * @throws Exception
 	 */
-	public void identityControl() throws Exception {
+	public void identityControl () throws Exception {
 		// MD5 hash of the public key
 		byte[] hash = Tools.hashFile("keys/public.key");
 		// Sending hash
@@ -152,12 +158,12 @@ public class MasterClient extends Client {
 				send(NOK);
 			}
 		}
-	} // identityControl()
+	} // identityControl ()
 	/**
 	 * Method which permit to change role during the identity control
 	 * @throws Exception
 	 */
-	public void changeRole() throws Exception {
+	public void changeRole () throws Exception {
         // Receipt of hash of identity control
 		byte[] tailleHash = receive(1);
 		byte[] hash = receive(Utils.byteArrayToInt(tailleHash));
@@ -210,7 +216,7 @@ public class MasterClient extends Client {
 		    	System.out.println("La vérification a échouée."); // DEBUG
 		}	
 		
-	} // changeRole()
+	} // changeRole ()
 
 	/**
 	 * Used by the client master to invite clients to join its group
@@ -218,57 +224,50 @@ public class MasterClient extends Client {
 	 * @throws IOException
 	 * @throws InterruptedException 
 	 */
-	public void invitation(String nameGroup) throws IOException, InterruptedException {
+	public void invitation (String nameGroup) throws IOException, InterruptedException {
 		byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation we can use a key word as invitation !
 
 		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, 9999);
 
 	    _broadcastSocket.send(toSend);
 		
-	} // Invitation()
+	} // Invitation ()
 	
-	public void receiveClient() throws IOException { // Si la boucle marche pas on fera un timeout
+	/**
+	 * 
+	 * @throws IOException
+	 */
+	public void receiveClient () throws IOException { // Test au pire reprendre méthode du 19/04 à 20h
 		byte[] data = new byte[2];
-		/*
-		byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
-		_ipGroup = InetAddress.getByName("239.255.80.85");
-		_broadcastSocket = new MulticastSocket();
-		_broadcastSocket.joinGroup(_ipGroup);
-		DatagramPacket pck = new DatagramPacket(toSend, toSend.length, _ipGroup, _port);
-		_broadcastSocket.send(pck);
-		 */
 		
 		_tmpListenSocket = new ServerSocket(10000);
 		
 		while(_loop) {
-			System.out.println("aaa"); // DEBUG
 			_tmpSocket = _tmpListenSocket.accept();
 			_tmpIn = _tmpSocket.getInputStream();
 			_tmpIn.read(data);
 			System.out.println(_tmpSocket.getInetAddress()); // DEBUG
-			System.out.println(Arrays.equals(data, OK));	// DEBUG	
 			if(Arrays.equals(data, OK) && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
 				_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
 				System.out.println("Client added");	// DEBUG
 			} 
 		}
-	}
+		discussionGroupCreation();
+		
+	} // receiveClient ()
 
 	/**
 	 * Distribution of the adresses ips to the clients slave from the client master. Moreover,
 	 * this function creates the first link between the client master and the first client slave for the ring.
 	 * @throws IOException
 	 */
-	public void discussionGroupCreation() throws IOException {
+	public void discussionGroupCreation () throws IOException { // Test au pire reprendre méthode du 19/04 à 20h
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
 		byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
-		for(int i = 0; i < _acceptedClients.size()-1; ++i) {
-			System.out.println(_acceptedClients.get(i));
-			_tmpSocket = new Socket(_acceptedClients.get(i), 11111);
-			_tmpOut = _tmpSocket.getOutputStream();
-			_tmpOut.write(toSend);
-			_tmpOut.flush();
-		}
+		_tmpOut = _tmpSocket.getOutputStream();
+		_tmpOut.write(toSend);
+		_tmpOut.flush();
+
 		String ipNeighboor = _acceptedClients.get(0);
 		System.out.println(ipNeighboor);
 		startServerMode(_port);
@@ -276,14 +275,12 @@ public class MasterClient extends Client {
 		
 		_tmpSocket.close();
 		_tmpListenSocket.close();
-	} // discussionGroupCreation()
+		
+	} // discussionGroupCreation ()
 
-	public boolean is_loop() {
-		return _loop;
-	}
-
-	public void set_loop(boolean loop) {
+	public void set_loop (boolean loop) {
 		_loop = loop;
-	}
+		
+	} // set_loop ()
 	
 } // ClientMaster

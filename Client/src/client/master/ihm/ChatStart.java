@@ -7,7 +7,6 @@ import javax.swing.JButton;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
 
 @SuppressWarnings("serial")
 public class ChatStart extends JPanel {
@@ -15,7 +14,7 @@ public class ChatStart extends JPanel {
 	/**
      * Constructor
      */
-    public ChatStart() {
+    public ChatStart () {
         setFocusable(true);
         requestFocusInWindow(true);
         setBackground(Color.WHITE);
@@ -28,25 +27,21 @@ public class ChatStart extends JPanel {
         JButton btnLaunchServer = new JButton("Start chat");
         btnLaunchServer.addActionListener(new ActionListener() {
         	@Override
-        	public void actionPerformed(ActionEvent e) {
+        	public void actionPerformed (ActionEvent e) {
         		Thread t = new Thread(new Runnable() {
         		    @Override
-        		    public void run() {
-        				try {
-        					// On considère un seul serveur !
-        					MasterClientGUI.get_master().set_loop(false);
-        					MasterClientGUI.get_master().discussionGroupCreation();
-        				} catch (IOException e) {
-        					e.printStackTrace();
-        				}	
-        	        } // run()
+        		    public void run () {
+        				MasterClientGUI.get_master().set_loop(false);
+        				
+        	        } // run ()
         	    });
         		t.start();
-        	} // actionPerformed()
+        		
+        	} // actionPerformed ()
         });
-        btnLaunchServer.setBounds(174, 207, 114, 39);
+        btnLaunchServer.setBounds(161, 171, 118, 59);
         add(btnLaunchServer);             
             
-    } // ChatStart()
+    } // ChatStart ()
     
 } // ChatStart

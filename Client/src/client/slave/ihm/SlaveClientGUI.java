@@ -24,19 +24,11 @@ public class SlaveClientGUI extends JFrame {
     protected static JoinGroup _jgroup;
     /** Slave client */
 	private static SlaveClient _slave;
-	
-    public static SlaveClient get_slave() {
-		return _slave;
-	}
-
-	public static void set_slave(SlaveClient slave) {
-		_slave = slave;
-	}
 
 	/**
      * Constructor
      */
-    public SlaveClientGUI() {
+    public SlaveClientGUI () {
         try { // Forcing the use of the system's look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
@@ -65,28 +57,48 @@ public class SlaveClientGUI extends JFrame {
         JMenuItem mntmQuitter = new JMenuItem("Exit");
         mntmQuitter.addActionListener(new ActionListener() {
         	@Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed (ActionEvent e) {
             	int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Stopping the application", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if(option == JOptionPane.OK_OPTION) System.exit(0);
-            } // actionPerformed()
+                
+            } // actionPerformed ()
         });
         Menu.add(mntmQuitter);
         
-        addWindowListener(new WindowAdapter() {
+        addWindowListener(new WindowAdapter () {
         	@Override
             public void windowClosing(WindowEvent e) {
             	int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Stopping the application", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if(option == JOptionPane.OK_OPTION) System.exit(0);
-            } // windowClosing()
+                
+            } // windowClosing ()
         });
         
-    } // SlaveClientGUI() 
+    } // SlaveClientGUI () 
+    
+    /**
+     * 
+     * @return
+     */
+    public static SlaveClient get_slave () {
+		return _slave;
+		
+	} // get_slave ()
+
+    /**
+     * 
+     * @param slave
+     */
+	public static void set_slave (SlaveClient slave) {
+		_slave = slave;
+		
+	} // set_slave ()
     
     /**
      * Method which permits to launch the client slave application
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main (String[] args) {
     	SlaveClientGUI fr = new SlaveClientGUI();
         fr.setTitle("Secured exchange group");
         fr.setSize(500, 350);
@@ -95,6 +107,6 @@ public class SlaveClientGUI extends JFrame {
         fr.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         fr.setVisible(true);
         
-    } // main()
+    } // main ()
     
 } // SlaveClientGUI

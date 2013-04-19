@@ -54,7 +54,7 @@ public class Client {
 	public final byte[] OK = new byte[]{0x4f, 0x11};
 	/** Constant of error */
 	public final byte[] NOK = new byte[]{0x4f, 0x00};
-	/** Constant of creation group */
+	/** Constant of group creation */
 	public final byte[] CREATION = new byte[]{0x2f, 0x00};
 	
 	/**
@@ -62,7 +62,7 @@ public class Client {
 	 * @param username : User name of the client
 	 * @throws Exception
 	 */
-	public Client(String username) {
+	public Client (String username) {
 		try {
 			// Verifying the existence of a key pair
 			// Backup if necessary (if only one file is missing regenerating all)
@@ -75,7 +75,7 @@ public class Client {
 			e.printStackTrace();
 		}
 		
-	} // Client()
+	} // Client ()
 
 	/**
 	 * Method which permits to connect client/server via socket
@@ -85,13 +85,13 @@ public class Client {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public Socket connectionServer(String host, int port) throws UnknownHostException, IOException {
+	public Socket connectionServer (String host, int port) throws UnknownHostException, IOException {
 		_clientSocket = new Socket(host, port);
 		_outServer = _clientSocket.getOutputStream();
 		_inServer = _clientSocket.getInputStream();
 		return _clientSocket;
 		
-	} // connectionServer()
+	} // connectionServer ()
 	
 	/**
 	 * Method which permits to connect client with his neighboor via socket
@@ -101,12 +101,12 @@ public class Client {
 	 * @throws UnknownHostException
 	 * @throws IOException
 	 */
-	public Socket connectionNeighboor(String ipNext, int port) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
+	public Socket connectionNeighboor (String ipNext, int port) throws UnknownHostException, IOException { // Tu pourras mettre le port _portClient
 		_socketNeighboor = new Socket(ipNext, port);
 		_outClient = _socketNeighboor.getOutputStream();
 		return _socketNeighboor;
 		
-	} // connectionNeighboor()
+	} // connectionNeighboor ()
 	
 	/**
 	 * Method which permits to receive message from precedent client in the ring
@@ -114,42 +114,42 @@ public class Client {
 	 * @return The connection socket
 	 * @throws IOException
 	 */
-	public Socket startServerMode(int port) throws IOException {
+	public Socket startServerMode (int port) throws IOException {
 		_listenSocket = new ServerSocket(port);
 		_precSocket = _listenSocket.accept();
 		_inClient = _precSocket.getInputStream();
 		return _precSocket;
 		
-	} // startServerMode()
+	} // startServerMode ()
 	
 	/**
 	 * Close the socket which permits communication between server and client
 	 * @throws IOException
 	 */
-	public void closeConnectionServer() throws IOException {
+	public void closeConnectionServer () throws IOException {
 		_clientSocket.close();
 		
-	} // closeConnectionServer()
+	} // closeConnectionServer ()
 	
 	/**
 	 * Close the socket which permits communication between client and neighboor
 	 * @throws IOException
 	 */
-	public void closeConnectionNeighboor() throws IOException {
+	public void closeConnectionNeighboor () throws IOException {
 		_socketNeighboor.close();
 		
-	} // closeConnectionNeighboor()
+	} // closeConnectionNeighboor ()
 	
 	/**
 	 * Method which permits to send byte array
 	 * @param message : Byte array to send
 	 * @throws IOException
 	 */
-	public void send(byte[] message) throws IOException {
+	public void send (byte[] message) throws IOException {
 		_outServer.write(message);
 		_outServer.flush();
 		
-	} // send()
+	} // send ()
 
 	/**
 	 * Méthod which permits to receive byte array
@@ -163,6 +163,6 @@ public class Client {
 		_inServer.read(data); // Reading the inputstream
 		return data;
 		
-	} // receive()
+	} // receive ()
 	
 } // Client

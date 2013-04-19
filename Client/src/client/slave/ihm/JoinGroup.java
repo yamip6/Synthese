@@ -16,7 +16,7 @@ public class JoinGroup extends JPanel {
     /**
      * Constructor
      */
-    public JoinGroup() {
+    public JoinGroup () {
         setFocusable(true);
         requestFocusInWindow(true);
         setBackground(Color.WHITE);
@@ -30,8 +30,7 @@ public class JoinGroup extends JPanel {
         JButton btnLaunchServer = new JButton("Join group");
         btnLaunchServer.addActionListener(new ActionListener() {
         	@Override
-        	public void actionPerformed(ActionEvent e) {
-        		System.out.println("PASCAL"); // DEBUG
+        	public void actionPerformed (ActionEvent e) {
         		try {
         			// MAJ de la JTable dans config
         			// _slave.requestJoinGroup(/*récupérer le 1er element de la ligne sélectionnée (grp)*/, /*récupérer le 2e element de la ligne sélectionnée (ip)*/); // devrait rendre un booleen avec raison echec
@@ -39,12 +38,13 @@ public class JoinGroup extends JPanel {
         			SlaveClientGUI.get_slave().linkNeighboor("192.168.1.110"); //_slave.get_listGroups().get("ligne sélectionnée");
 				} catch (Exception e1) {
 					e1.printStackTrace();
-				} 
-        	} // actionPerformed()
+				}
+        		
+        	} // actionPerformed ()
         });
         btnLaunchServer.setBounds(160, 208, 114, 39);
         add(btnLaunchServer);           
         
-    } // JoinGroup()    
+    } // JoinGroup ()    
     
 } // JoinGroup

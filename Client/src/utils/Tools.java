@@ -33,7 +33,7 @@ public class Tools {
 	 * @throws IOException
 	 * @throws InvalidKeySpecException
 	 */
-	public static void keyGenerator() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, IOException, InvalidKeySpecException {
+	public static void keyGenerator () throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, IOException, InvalidKeySpecException {
 		// Generation of key pair
 		KeyPair keyPair = Crypto.generateKeyPair("RSA");
 		PublicKey pubKey = keyPair.getPublic();
@@ -54,31 +54,31 @@ public class Tools {
 		Utils.saveBuffer(secretKeySalt, new File("keys/private.salt.key"));
 		Utils.saveBuffer(pubKey.getEncoded(), new File("keys/public.key"));
 		
-	} // keyGenerator()
+	} // keyGenerator ()
 	
 	/**
 	 * Method to determine whether a public key is already stored
 	 * @param hash : Hash of the public key
 	 * @return True if it is already stored, false otherwise
 	 */
-	public static boolean isPubKeyStored(byte[] hash) {
+	public static boolean isPubKeyStored (byte[] hash) {
 		if(new File("contacts/" + Utils.byteArrayToHexString(hash) + ".key").exists())
 			return true;
 		return false;
 		
-	} // isPubKeyStored()
+	} // isPubKeyStored ()
 	
 	/**
 	 * Method for generating a random sequence of 16 bytes
 	 * @return The byte array resulting
 	 */
-	public static byte[] getChallenge() throws NoSuchAlgorithmException {
+	public static byte[] getChallenge () throws NoSuchAlgorithmException {
 		SecureRandom inst = SecureRandom.getInstance("SHA1PRNG");
 		byte buffer[] = new byte[16];
 		inst.nextBytes(buffer);
 		return buffer;
 		
-	} // getChallenge()
+	} // getChallenge ()
 	
 	/**
 	 * Method to verify a signature SHA1WITHRSA
@@ -87,7 +87,7 @@ public class Tools {
 	 * @param signature : The signature resulting
 	 * @return True if the signature is valid and false otherwise
 	 */
-	public static boolean verifSign(byte[] data, byte[] publicKey, byte[] signature) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException, NoSuchPaddingException, IOException {
+	public static boolean verifSign (byte[] data, byte[] publicKey, byte[] signature) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException, NoSuchPaddingException, IOException {
 		PublicKey pubKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKey));
 		
 		String signAlgorithm = "SHA1WITHRSA";
@@ -102,27 +102,27 @@ public class Tools {
 		else
 		    return false;
 		
-	} // verifSign()
+	} // verifSign ()
 	
 	/**
 	 * Method to perform a MD5 hash of a byte array
 	 * @param message : Byte array that you want to hash
 	 * @return The byte array hashed
 	 */
-	public static byte[] hash(byte[] message) throws NoSuchAlgorithmException, IOException {
+	public static byte[] hash (byte[] message) throws NoSuchAlgorithmException, IOException {
 		MessageDigest digest = MessageDigest.getInstance("MD5");
 		digest.update(message);
 	
 		return digest.digest();
 		
-	} // hash()
+	} // hash ()
 	
 	/**
 	 * Method to perform a MD5 hash of a file
 	 * @param pathname : File path to hash
 	 * @return The byte array hashed
 	 */
-	public static byte[] hashFile(String pathname) throws NoSuchAlgorithmException, IOException {
+	public static byte[] hashFile (String pathname) throws NoSuchAlgorithmException, IOException {
 		File inputFile = new File(pathname);
 		InputStream fis = new FileInputStream(inputFile);
 		byte buffer[] = new byte[16384];
@@ -135,7 +135,7 @@ public class Tools {
 	
 		return digest.digest();
 		
-	} // hashFile()
+	} // hashFile ()
 	
 	/**
 	 * Method to sign with the algorithm SHA1WITHRSA a byte array
@@ -143,8 +143,8 @@ public class Tools {
 	 * @param message : Byte array to sign
 	 * @return The signature of message
 	 */
-	public static byte[] sign(PrivateKey privateKey, byte[] message) throws IOException, SignatureException, NoSuchAlgorithmException, InvalidKeyException {
-		// Initialisation de la signature
+	public static byte[] sign (PrivateKey privateKey, byte[] message) throws IOException, SignatureException, NoSuchAlgorithmException, InvalidKeyException {
+		// Signature initialization
 		String signAlgorithm = "SHA1WITHRSA";
 		Signature sign = Signature.getInstance(signAlgorithm);
 		sign.initSign(privateKey);
@@ -153,6 +153,6 @@ public class Tools {
 
 		return sign.sign();
 		
-	} // sign()
+	} // sign ()
 
 } // Tools

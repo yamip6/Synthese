@@ -28,11 +28,11 @@ public class Crypto {
 	 * @param buffer
 	 * @throws NoSuchAlgorithmException
 	 */
-	public static void randomFillBuffer(byte[] buffer) throws NoSuchAlgorithmException {
+	public static void randomFillBuffer (byte[] buffer) throws NoSuchAlgorithmException {
 		SecureRandom inst = SecureRandom.getInstance("SHA1PRNG");
 		inst.nextBytes(buffer);
 		
-	} // randomFillBuffer()
+	} // randomFillBuffer ()
 
 	/**
 	 * 
@@ -40,11 +40,11 @@ public class Crypto {
 	 * @return
 	 * @throws NoSuchAlgorithmException
 	 */
-	public static KeyPair generateKeyPair(String algorithm) throws NoSuchAlgorithmException {
+	public static KeyPair generateKeyPair (String algorithm) throws NoSuchAlgorithmException {
 		KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm);
 		return generator.generateKeyPair();
 		
-	} // generateKeyPair()
+	} // generateKeyPair ()
 
 	/**
 	 * Method which generate an AES key from a password
@@ -55,10 +55,10 @@ public class Crypto {
 	 * @throws InvalidKeySpecException
 	 * @throws IOException
 	 */
-	public static SecretKey getKeyFromPBKDF(String message, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+	public static SecretKey getKeyFromPBKDF (String message, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
 		return getKeyFromPBKDF(message, salt, 1000, 128);
 		
-	} // getKeyFromPBKDF()
+	} // getKeyFromPBKDF ()
 
 	/**
 	 * Method which generate an AES key from a password
@@ -71,7 +71,7 @@ public class Crypto {
 	 * @throws InvalidKeySpecException
 	 * @throws IOException
 	 */
-	public static SecretKey getKeyFromPBKDF(String message, byte[] salt, int iterationCount, int keyLength) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+	public static SecretKey getKeyFromPBKDF (String message, byte[] salt, int iterationCount, int keyLength) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
 		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WITHHMACSHA1");
 		char[] password = Utils.readPassword(message);
 		PBEKeySpec keySpec = new PBEKeySpec(password, salt, iterationCount, keyLength);
@@ -80,7 +80,7 @@ public class Crypto {
 		
 		return new SecretKeySpec(factory.generateSecret(keySpec).getEncoded(), "AES");
 		
-	} // getKeyFromPBKDF()
+	} // getKeyFromPBKDF ()
 
 	/**
 	 * 
@@ -94,7 +94,7 @@ public class Crypto {
 	 * @throws NoSuchPaddingException
 	 * @throws InvalidKeyException
 	 */
-	public static KeyPair loadKeyPair(File priv, File salt, File pub) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException {
+	public static KeyPair loadKeyPair (File priv, File salt, File pub) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException {
 		KeyFactory factory = KeyFactory.getInstance("RSA");
 
 		// Loading the public key
@@ -109,7 +109,7 @@ public class Crypto {
 		PrivateKey privKey = (PrivateKey) keyWrapper.unwrap(wrappedPrivateKey, "RSA", Cipher.PRIVATE_KEY);
 		return new KeyPair(pubKey, privKey);
 		
-	} // loadKeyPair()
+	} // loadKeyPair ()
 	
 	/**
 	 * 
@@ -121,12 +121,12 @@ public class Crypto {
 	 * @throws NoSuchPaddingException
 	 * @throws InvalidKeyException
 	 */
-	public static PublicKey loadPubKey(File pub) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException {
+	public static PublicKey loadPubKey (File pub) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException {
 		KeyFactory factory = KeyFactory.getInstance("RSA");
 
 		// Loading the public key
 		return factory.generatePublic(new X509EncodedKeySpec(Utils.readBuffer(pub)));
 		
-	} // loadPubKey()
+	} // loadPubKey ()
 	
 } // Crypto
