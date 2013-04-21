@@ -35,6 +35,8 @@ public class MasterClient extends Client {
     private InputStream _tmpIn;
     /** Socket output stream with client */
     private OutputStream _tmpOut;
+    /** Temporary socket list of the group */
+    private ArrayList<Socket> _socketList;
     
     /** */
     private volatile boolean _loop = true;
@@ -51,6 +53,7 @@ public class MasterClient extends Client {
 		try {
 			connectionServer(adressServer, port);
 			_acceptedClients = new ArrayList<String>();
+			_socketList = new ArrayList<Socket>();
 			_broadcastSocket = new MulticastSocket();
 			_broadcastSocket.joinGroup(_ipGroup);
 		} catch (Exception e) {
@@ -249,10 +252,10 @@ public class MasterClient extends Client {
 			System.out.println(_tmpSocket.getInetAddress()); // DEBUG
 			if(Arrays.equals(data, OK) && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
 				_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
+				_socketList.add(_tmpSocket); // Record the client
 				System.out.println("Client added");	// DEBUG
 			} 
 		}
-		discussionGroupCreation();
 		
 	} // receiveClient ()
 
@@ -261,12 +264,16 @@ public class MasterClient extends Client {
 	 * this function creates the first link between the client master and the first client slave for the ring.
 	 * @throws IOException
 	 */
-	public void discussionGroupCreation () throws IOException { // Test au pire reprendre méthode du 19/04 à 20h
+	public void discussionGroupCreation () throws IOException {
+		System.out.println("Création du groupe de discussion");
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
-		byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
-		_tmpOut = _tmpSocket.getOutputStream();
-		_tmpOut.write(toSend);
-		_tmpOut.flush();
+		
+		for(Socket tmpSocket : _socketList) {
+			byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
+			_tmpOut = tmpSocket.getOutputStream();
+			_tmpOut.write(toSend);
+			_tmpOut.flush();
+		}
 
 		String ipNeighboor = _acceptedClients.get(0);
 		System.out.println(ipNeighboor);

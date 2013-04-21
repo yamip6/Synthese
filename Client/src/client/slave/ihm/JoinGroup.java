@@ -34,8 +34,8 @@ public class JoinGroup extends JPanel {
         		try {
         			// MAJ de la JTable dans config
         			// _slave.requestJoinGroup(/*récupérer le 1er element de la ligne sélectionnée (grp)*/, /*récupérer le 2e element de la ligne sélectionnée (ip)*/); // devrait rendre un booleen avec raison echec
-        			SlaveClientGUI.get_slave().requestJoinGroup("toto", "192.168.1.110"); // Pas sûr que le groupe serve a quelque chose ici
-        			SlaveClientGUI.get_slave().linkNeighboor("192.168.1.110"); //_slave.get_listGroups().get("ligne sélectionnée");
+        			SlaveClientGUI.get_slave().requestJoinGroup("toto", "192.168.56.1"); // Pas sûr que le groupe serve a quelque chose ici
+        			SlaveClientGUI.get_slave().linkNeighboor("192.168.56.1"); //_slave.get_listGroups().get("ligne sélectionnée");
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
