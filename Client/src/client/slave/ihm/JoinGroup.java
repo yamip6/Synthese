@@ -1,6 +1,5 @@
 package client.slave.ihm;
 
-
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
@@ -10,11 +9,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+
 import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
 
 @SuppressWarnings("serial")
 public class JoinGroup extends JPanel {
@@ -22,6 +18,7 @@ public class JoinGroup extends JPanel {
 	private JTable _table;
 	private TableModel _modele;
 	private HashMap<String, String> _listGroups;
+	private JScrollPane scrollPane;
 	
     /**
      * Constructor
@@ -32,14 +29,15 @@ public class JoinGroup extends JPanel {
         setBackground(Color.WHITE);
         setLayout(null);               
         
-        _listGroups = SlaveClientGUI.get_slave().get_listGroups();
+        _listGroups = new HashMap<String,String>();
         _modele = new TableModel(_listGroups);
         _table = new JTable(_modele); // Pour Yassine
         
         _table.setBounds(85, 42, 316, 144);
         _table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        add(new JScrollPane(_table), BorderLayout.CENTER);
-        
+        scrollPane = new JScrollPane(_table);
+        scrollPane.setBounds(85, 42, 316, 144);
+        add(scrollPane, BorderLayout.CENTER);      
         
         JButton btnLaunchServer = new JButton("Join group");
         btnLaunchServer.addActionListener(new ActionListener() {
@@ -50,9 +48,10 @@ public class JoinGroup extends JPanel {
         			int rowSelectionned = _table.getSelectedRow();
         			String ip = (String) _table.getValueAt(rowSelectionned, 0);
         			String grp = (String) _table.getValueAt(rowSelectionned, 1);
-        			// _slave.requestJoinGroup(/*récupérer le 1er element de la ligne sélectionnée (grp)*/, /*récupérer le 2e element de la ligne sélectionnée (ip)*/); // devrait rendre un booleen avec raison echec
-        			SlaveClientGUI.get_slave().requestJoinGroup(grp, "192.168.56.1"); // Pas sûr que le groupe serve a quelque chose ici, je laisse l'ip pr les tests
-        			SlaveClientGUI.get_slave().linkNeighboor("192.168.56.1"); //_slave.get_listGroups().get("ligne sélectionnée");
+   
+        			SlaveClientGUI.get_slave().requestJoinGroup(grp, ip); // devrait rendre un booleen avec raison echec
+        			
+        			SlaveClientGUI.get_slave().linkNeighboor();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -67,10 +66,11 @@ public class JoinGroup extends JPanel {
     /**
      * Call it to update JTable
      */
-    public void refresh() {
+    public void refresh () {
 		_modele = new TableModel(SlaveClientGUI.get_slave().get_listGroups());
         _table.setModel(_modele);
         _modele.fireTableDataChanged();
-    } // refresh()
+        
+    } // refresh ()
     
 } // JoinGroup

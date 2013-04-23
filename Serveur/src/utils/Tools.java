@@ -1,5 +1,6 @@
 package utils;
 
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -12,11 +13,15 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,6 +60,24 @@ public class Tools {
 		Utils.saveBuffer(pubKey.getEncoded(), new File("keys/public.key"));
 		
 	} // keyGenerator ()
+	
+	public static byte[] testAuth (String username, String pass, byte[] challenge) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		// Génération des paramètres pour le chiffrement
+	    byte[] key = (username + pass).getBytes(); // + sel...
+	    MessageDigest sha = MessageDigest.getInstance("SHA-1");
+	    key = sha.digest(key);
+	    key = Arrays.copyOf(key, 16); // use only first 128 bit
+		SecretKey secretKey = new SecretKeySpec(key, "AES");
+							 
+		// Initialisation du chiffrement
+		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+		
+		String cipherAlgorithm = "AES/CTR/NoPadding";
+		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+		cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
+		return cipher.doFinal(challenge, 0, 16);
+		
+	} // testAuth ()
 	
 	/**
 	 * Method to determine whether a public key is already stored

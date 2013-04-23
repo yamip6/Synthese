@@ -38,7 +38,7 @@ public class SlaveClient extends Client {
 	 * Allow a client to receive invitation then if the client wished this group, he sends an answer
 	 * @throws IOException
 	 */
-	public void receiveInvitation () throws IOException{
+	public void receiveInvitation () throws IOException {
 		assert(_listGroups != null);
 		
 		byte[] receiveDtg = new byte[1024];
@@ -72,7 +72,7 @@ public class SlaveClient extends Client {
 	 * @param ipClientBis is the Address IP of the client master
 	 * @throws Exception 
 	 */
-	public void linkNeighboor (String ipClientBis) throws Exception {
+	public void linkNeighboor () throws Exception {
 		_inServer = _clientSocket.getInputStream();
 		byte[] data = receive(1024);
 		System.out.println("Liaison au voisin...");

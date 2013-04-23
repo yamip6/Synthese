@@ -1,6 +1,5 @@
 package client.slave.ihm;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -11,7 +10,7 @@ import javax.swing.table.AbstractTableModel;
 public class TableModel extends AbstractTableModel {
 	
 	private ArrayList<String> _listIp;
-	private ArrayList<String>      _listGr;
+	private ArrayList<String> _listGr;
 	
 	private final String[] entetes = {"Adresse(s) Ip(s)", "Groupe(s)"};
 	
@@ -51,6 +50,5 @@ public class TableModel extends AbstractTableModel {
 				return null;
 		}
 	} // getValueAt ()
-
     
 }

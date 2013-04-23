@@ -10,8 +10,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import client.slave.SlaveClient;
 
@@ -46,21 +44,10 @@ public class Config extends JPanel {
         			SlaveClientGUI.set_slave(new SlaveClient(_username.getText()));
         		    Thread t = new Thread(new Runnable() {
         				@Override
-        				public void run () {
+        				public void run () { // A mettre dans une boucle si plusieurs clientMaster à étudier
         					try {
         						SlaveClientGUI.get_slave().receiveInvitation();
-        						
-        						// MAJ : 
-        						Timer t = new Timer();
-        						t.schedule(new TimerTask() {
-        							@Override
-        							public void run() {
-        								SlaveClientGUI._jgroup.refresh();
-        								System.out.println("Refresh"); // DEBUG
-        							}
-        						}, 0, 3000); // Every 3 seconds => refresh
-        				        
-        						// MAJ du modèle de la JTable de JoinGroup et refresh
+        						SlaveClientGUI._jgroup.refresh(); // MAJ du modèle de la JTable de JoinGroup et refresh
         					} catch (IOException e) {
         						e.printStackTrace();
         					}
