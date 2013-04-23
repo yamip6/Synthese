@@ -1,33 +1,56 @@
 package client.slave.ihm;
 
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
+
 import javax.swing.table.AbstractTableModel;
 
 @SuppressWarnings("serial")
 public class TableModel extends AbstractTableModel {
-    public TableModel() {
-        super();
+	
+	private ArrayList<String> _listIp;
+	private ArrayList<String>      _listGr;
+	
+	private final String[] entetes = {"Adresse(s) Ip(s)", "Groupe(s)"};
+	
+    public TableModel(HashMap<String, String> liste) {
+    	_listIp = new ArrayList<String>();
+		_listGr = new ArrayList<String>();
+		for(Entry<String, String> entry : liste.entrySet()) {
+		    String cle = entry.getKey();
+		    String valeur = entry.getValue();
+		    _listIp.add(cle); _listGr.add(valeur);
+		}
     }
  
-    public int getRowCount() {
-        return 8;
-    }
- 
-    public int getColumnCount() {
-        return 10;
-    }
- 
-    public String getColumnName(int columnIndex) {
-    	if(columnIndex == 0)
-    		return "";
-    	else
-            return String.valueOf(columnIndex*5) + " km";
-    }
- 
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        if(columnIndex == 0)
-        	return String.valueOf(8+2*rowIndex) + " Km/h";
-        else
-        	return 60*columnIndex*5/(8+2*rowIndex);
-    }
+    @Override
+	public String getColumnName(int column) {
+		return entetes[column];
+	} // getColumnName ()
+    
+    @Override
+	public int getColumnCount() {
+		return entetes.length;
+	} // getColumnCount ()
+
+	@Override
+	public int getRowCount() {
+		return _listIp.size();
+	} // getRowCount ()
+	
+	@Override
+	public Object getValueAt(int row, int col) {
+		switch(col){
+			case 0:
+				return _listIp.get(row);
+			case 1:
+				return _listGr.get(row);
+			default:
+				return null;
+		}
+	} // getValueAt ()
+
     
 }

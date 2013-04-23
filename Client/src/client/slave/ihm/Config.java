@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import client.slave.SlaveClient;
 
@@ -47,6 +49,17 @@ public class Config extends JPanel {
         				public void run () {
         					try {
         						SlaveClientGUI.get_slave().receiveInvitation();
+        						
+        						// MAJ : 
+        						Timer t = new Timer();
+        						t.schedule(new TimerTask() {
+        							@Override
+        							public void run() {
+        								SlaveClientGUI._jgroup.refresh();
+        								System.out.println("Refresh"); // DEBUG
+        							}
+        						}, 0, 3000); // Every 3 seconds => refresh
+        				        
         						// MAJ du modèle de la JTable de JoinGroup et refresh
         					} catch (IOException e) {
         						e.printStackTrace();
