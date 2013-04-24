@@ -1,5 +1,6 @@
 package utils;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -9,7 +10,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 
 import java.util.ArrayList;
 
@@ -90,13 +94,13 @@ public class Utils {
 	 * @throws IOException
 	 */
 	public static byte[] arrayListToByteArray (ArrayList<String> l) throws IOException{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream(baos);
-		for (String element : l) {
-		    out.writeUTF(element);
-		}
-		return baos.toByteArray();
 		
+		StringBuilder result = new StringBuilder();
+		for (String elem : l){
+			result.append(elem + ' '); // Je concatène chaque message
+		}
+		
+		return result.toString().getBytes();
 	} // arrayListToByte ()
 	
 	/**
@@ -106,15 +110,15 @@ public class Utils {
 	 * @throws IOException
 	 */
 	public static ArrayList<String> byteArrayToList (byte[] l) throws IOException {
-		ByteArrayInputStream bais = new ByteArrayInputStream(l);
-		DataInputStream in = new DataInputStream(bais);
 		ArrayList<String> out = new ArrayList<String>();
-		while (in.available() > 0) {
-		    String element = in.readUTF();
-		    out.add(element);
+		
+		String s = new String(l);
+		String[] tab = s.split(" ");
+		for(int i = 0; i < tab.length; ++i){
+			out.add(tab[i]);
 		}
 		return out;
-		
+	    
 	} // byteArrayToList ()
 	
 	/**
@@ -156,5 +160,26 @@ public class Utils {
 		return pass.toCharArray();
 		
 	} // readPassword ()
+	
+	public static void main(String[] args) {
+		
+		ArrayList<String> liste = new ArrayList<String>();
+		liste.add("Identifiant1");
+		liste.add("Identifiant2");
+		liste.add("Identifiant3");
+		try {
+			byte[] array = arrayListToByteArray(liste);
+			System.out.println(array.length); 
+			ArrayList<String> test = byteArrayToList(array);
+			assert("Identifiant1".equals(test.get(0)));
+			assert("Identifiant2".equals(test.get(1)));
+			assert("Identifiant3".equals(test.get(2)));
+			System.out.println("OK");
+			System.out.println(test);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 } // Utils
