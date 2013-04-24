@@ -1,19 +1,16 @@
 package client.master.ihm;
 
 import javax.swing.JPanel;
-import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-
-import client.slave.ihm.SlaveClientGUI;
-import client.slave.ihm.TableModel;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 
 @SuppressWarnings("serial")
 public class ChatStart extends JPanel {
@@ -31,17 +28,12 @@ public class ChatStart extends JPanel {
         setBackground(Color.WHITE);
         setLayout(null);
         
-       /* JLabel lblNewLabel = new JLabel("Liste des clients accept\u00E9s pour le groupe actualis\u00E9e");
-        lblNewLabel.setBounds(112, 38, 297, 114);
-        add(lblNewLabel);*/
-        
-        _modele = new TableModelMaster(MasterClientGUI.get_master().get_acceptedClients());
-        _table = new JTable(_modele); // Pour Yassine
-        
+        _modele = new TableModelMaster(new ArrayList<String>());
+        _table = new JTable(_modele);      
         _table.setBounds(85, 42, 316, 144);
         _table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         _scrollPane = new JScrollPane(_table);
-        _scrollPane.setBounds(85, 42, 316, 144);
+        _scrollPane.setBounds(77, 11, 316, 144);
         add(_scrollPane, BorderLayout.CENTER);      
         
         JButton btnLaunchServer = new JButton("Start chat");

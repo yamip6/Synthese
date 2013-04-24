@@ -12,10 +12,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import java.security.KeyPair;
+import java.sql.ResultSet;
 
 import utils.Crypto;
 import utils.Tools;
 import utils.Utils;
+
+import db.ConnectDB;
 
 public class Server implements Runnable {
 
@@ -74,6 +77,8 @@ public class Server implements Runnable {
 	public void run () {
 		try {
 			while(true) {
+				ConnectDB.connect();
+				
 				_clientSocket = _listenSocket.accept();
 				_in = _clientSocket.getInputStream(); 
 				_out = _clientSocket.getOutputStream(); 
@@ -81,23 +86,39 @@ public class Server implements Runnable {
 				byte[] request = receive(2);
 				
 				if(Arrays.equals(request, CREATION)) { // Création
-					identityControl();
-					
-					byte[] size = receive(4);
-					byte[] username = receive(Utils.byteArrayToInt(size));
-					size = receive(4);
-					byte[] grpName = receive(Utils.byteArrayToInt(size));
-					System.out.println("Received from client : " + new String(grpName)); // DEBUG
-					size = receive(4);
-					byte[] signature = receive(Utils.byteArrayToInt(size));
-					boolean result = Tools.verifSign(Utils.concatenateByteArray(username, grpName), _publicKey, signature);
-					if(result && !_groupList.contains(new String(grpName))) { // Et test authentification
-						_groupList.add(new String(grpName));
-						send(OK); // On chiffre la réponse avec le mot de passe de la bdd, si lz client arrive a déchiffrer c'est qu'il s'est authentifier
-			            send(Utils.intToByteArray(grpName.length, 4));
-			            send(grpName); // Pas de controle d'intégrité
-					} else {
-						send(NOK); // + Raison Echec - Pas de controle d'intégrité
+					if(identityControl()) {					
+						byte[] size = receive(4);
+						byte[] username = receive(Utils.byteArrayToInt(size));
+						size = receive(4);
+						byte[] grpName = receive(Utils.byteArrayToInt(size));
+						System.out.println("Received from client : " + new String(grpName)); // DEBUG
+						size = receive(4);
+						byte[] signature = receive(Utils.byteArrayToInt(size));
+						boolean result = Tools.verifSign(Utils.concatenateByteArray(username, grpName), _publicKey, signature);
+									
+						if(result && !_groupList.contains(new String(grpName))) { // Et test authentification
+							send(OK);
+							// Getting the password of this user
+							ResultSet res = ConnectDB.dbSelect("SELECT password FROM members WHERE username = '" + new String(username) + "'");
+							res.next();
+							
+							byte[] tmpChallenge = Tools.getChallenge();
+							byte[] challenge = Tools.testAuth(new String(username), res.getString(1), tmpChallenge);
+							send(Utils.intToByteArray(challenge.length, 4));
+							send(challenge);
+							
+							size = receive(4);
+							byte[] tmpChallengeR = receive(Utils.byteArrayToInt(size));
+							if(Arrays.equals(tmpChallenge, tmpChallengeR)) {						
+								_groupList.add(new String(grpName));
+								send(OK); // A signer
+					            send(Utils.intToByteArray(grpName.length, 4));
+					            System.out.println("New group created."); // DEBUG
+							} else
+								send(NOK); // + Raison Echec - Signer
+						} else {
+							send(NOK); // + Raison Echec - Signer
+						}
 					}
 				}
 	        }
@@ -117,7 +138,7 @@ public class Server implements Runnable {
 	 * Method which realize the identity control between server and client bis
 	 * @throws Exception
 	 */
-	public void identityControl () throws Exception {
+	public boolean identityControl () throws Exception {
 		// Receipt hash of identity control
 		byte[] tailleHash = receive(1);
 		byte[] hash = receive(Utils.byteArrayToInt(tailleHash));
@@ -131,7 +152,7 @@ public class Server implements Runnable {
 			send(OK);
 			
 			System.out.println("Inversion des rôles."); //DEBUG
-			changeRole();
+			return changeRole();
 		} else {
 			// Sending challenge
 			System.out.println("Envoie du challenge (envoie NOK)."); // DEBUG
@@ -167,12 +188,13 @@ public class Server implements Runnable {
 		    	    Utils.saveBuffer(_publicKey, new File("contacts/" + Utils.byteArrayToHexString(empreinte) + ".key"));
 		    	    
 		    	    System.out.println("Inversion des rôles."); // DEBUG
-		    	    changeRole();
+		    	    return changeRole();
 		    	} else if(Arrays.equals(valide, NOK))
 		    		System.out.println("Le client n'a pas validé l'empreinte."); //DEBUG
 		    } else 
 		    	System.out.println("La vérification a échouée."); // DEBUG
 		}	
+		return false;
 		
 	} // identityControl ()
 	
@@ -180,7 +202,7 @@ public class Server implements Runnable {
 	 * Method which permit to change role during the identity control
 	 * @throws Exception
 	 */
-	public void changeRole () throws Exception {
+	public boolean changeRole () throws Exception {
 		// MD5 hash of the public key
 		byte[] hash = Tools.hashFile("keys/public.key");
 		// Sending hash
@@ -192,6 +214,7 @@ public class Server implements Runnable {
 		byte[] verif = receive(2);
 		if(Arrays.equals(verif, OK)) {
 			System.out.println("Votre clef est déjà enregistrée auprès du destinataire (réceprion OK)."); // DEBUG
+			return true;
 			// End of the exchange
 		} else if(Arrays.equals(verif, NOK)) {
 			// Receiving the challenge
@@ -223,11 +246,14 @@ public class Server implements Runnable {
 			if(Arrays.equals(empreinte, hash)) {
 				System.out.println("Les empreintes sont bien valides.");
 				send(OK);
+				return true;
 			} else {
 				System.out.println("Les empreintes reçue et réelle sont différentes.");
 				send(NOK);
 			}
 		}
+		return false;
+		
 	} // changeRole ()
 	
 	public void disconnection () throws IOException {

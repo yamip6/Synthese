@@ -11,14 +11,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import utils.Crypto;
 import utils.Tools;
 import utils.Utils;
 
 import client.Client;
+import client.master.ihm.MasterClientGUI;
 
 public class MasterClient extends Client {
 	/** List of ip clients which accepted the invitation and are accepted to join the group */
@@ -90,20 +98,34 @@ public class MasterClient extends Client {
 	 * @return boolean
 	 * @throws IOException
 	 * @throws ClassNotFoundException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws InvalidKeyException 
 	 */
-	public Boolean responseGroupCreation ()throws IOException, ClassNotFoundException {
+	public Boolean responseGroupCreation ()throws IOException, ClassNotFoundException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException {
 		byte[] response = receive(2);
 		if(Arrays.equals(response, OK)) {
 		    byte[] size = receive(4);
-		    byte[] grpWished = receive(Utils.byteArrayToInt(size));
-		    System.out.println("Response OK : " + new String(grpWished)); // DEBUG
-		    return true;
-		} else if(Arrays.equals(response, NOK)) {
-			byte[] size = receive(4);
-		    @SuppressWarnings("unused")
-			byte[] grpWished = receive(Utils.byteArrayToInt(size)); // + Raison Echec
+		    byte[] challenge = receive(Utils.byteArrayToInt(size));	    
+		    byte[] answer = Tools.tryChallenge(_username, new String(Utils.readPassword("Enter your password : ")), challenge);
+		    
+		    send(Utils.intToByteArray(answer.length, 4));
+		    send(answer);
+		    
+		    response = receive(2);
+			if(Arrays.equals(response, OK)) {
+		        System.out.println("Response OK."); // DEBUG
+		        return true;
+			} else if(Arrays.equals(response, NOK))
+				// + Raison Echec - Signature
+			    return false;
+		} else if(Arrays.equals(response, NOK))
+			// + Raison Echec - Signature
 		    return false;
-		}
+		
 		return false;
 		
 	} // responseGroupCreation ()
@@ -240,7 +262,7 @@ public class MasterClient extends Client {
 	 * 
 	 * @throws IOException
 	 */
-	public void receiveClient () throws IOException { // Test au pire reprendre méthode du 19/04 à 20h
+	public void receiveClient () throws IOException {
 		byte[] data = new byte[2];
 		
 		_tmpListenSocket = new ServerSocket(10000);
@@ -253,6 +275,7 @@ public class MasterClient extends Client {
 			if(Arrays.equals(data, OK) && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
 				_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
 				_socketList.add(_tmpSocket); // Record the client
+				MasterClientGUI.get_chat().refresh();
 				System.out.println("Client added");	// DEBUG
 			} 
 		}
@@ -285,9 +308,21 @@ public class MasterClient extends Client {
 		
 	} // discussionGroupCreation ()
 
+	/**
+	 * 
+	 * @param loop
+	 */
 	public void set_loop (boolean loop) {
 		_loop = loop;
 		
 	} // set_loop ()
+
+	/**
+	 * 
+	 * @return
+	 */
+	public ArrayList<String> get_acceptedClients() {
+		return _acceptedClients;
+	}
 	
 } // ClientMaster

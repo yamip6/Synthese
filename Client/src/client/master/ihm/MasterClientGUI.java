@@ -95,7 +95,16 @@ public class MasterClientGUI extends JFrame {
 	    
 	} // set_master ()
 	
-    /**
+	/**
+	 * 
+	 * @return
+	 */
+    public static ChatStart get_chat () {
+		return _chat;
+		
+	} // get_chat ()
+
+	/**
      * Method which permits to launch the client bis application
      * @param args
      */
