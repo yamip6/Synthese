@@ -61,6 +61,24 @@ public class Tools {
 		
 	} // keyGenerator ()
 	
+	public static byte[] tryChallenge (String username, String pass, byte[] challenge) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException {
+		// Génération des paramètres pour le chiffrement
+	    byte[] key = (username + pass).getBytes(); // + sel...
+	    MessageDigest sha = MessageDigest.getInstance("SHA-1");
+	    key = sha.digest(key);
+	    key = Arrays.copyOf(key, 16); // use only first 128 bit
+		SecretKey secretKey = new SecretKeySpec(key, "AES");
+							 
+		// Initialisation du chiffrement
+		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+		
+		String cipherAlgorithm = "AES/CTR/NoPadding";
+		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+		cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+		return cipher.doFinal(challenge);
+		
+	} // tryChallenge ()
+	
 	public static byte[] testAuth (String username, String pass, byte[] challenge) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
 		// Génération des paramètres pour le chiffrement
 	    byte[] key = (username + pass).getBytes(); // + sel...
@@ -75,7 +93,7 @@ public class Tools {
 		String cipherAlgorithm = "AES/CTR/NoPadding";
 		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
-		return cipher.doFinal(challenge, 0, 16);
+		return cipher.doFinal(challenge);
 		
 	} // testAuth ()
 	
@@ -177,5 +195,24 @@ public class Tools {
 		return sign.sign();
 		
 	} // sign ()
+	
+	/**
+	 * Méthode permettant d'effectuer un déchiffrement asymétrique RSA
+	 * @param data : Données que l'on souhaite déchiffrer
+	 * @param privKey : Clef privée utilisée pour le déchiffrement
+	 * @return Le tableau d'octets correspondant au message clair
+	 */
+	public static byte[] decrypt(byte[] data, PrivateKey privKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException {
+		// Initialisation du chiffrement
+		String cipherAlgorithm = "RSA";
+		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+		
+		cipher = Cipher.getInstance(cipherAlgorithm);
+		cipher.init(Cipher.DECRYPT_MODE, privKey);
+		cipher.update(data);
+
+		return cipher.doFinal();
+		
+	} // decrypt ()
 
 } // Tools

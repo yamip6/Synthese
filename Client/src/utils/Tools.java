@@ -75,7 +75,7 @@ public class Tools {
 		String cipherAlgorithm = "AES/CTR/NoPadding";
 		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
 		cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
-		return cipher.doFinal(challenge, 0, 16);
+		return cipher.doFinal(challenge);
 		
 	} // tryChallenge ()
 	
@@ -177,5 +177,42 @@ public class Tools {
 		return sign.sign();
 		
 	} // sign ()
+	
+	/**
+	 * Méthode permettant d'effectuer un chiffrement asymétrique RSA
+	 * @param data : Données que l'on souhaite chiffrer
+	 * @param publicKey : Clef publique du destinataire
+	 * @return Le tableau d'octets correspondant au chiffré
+	 */
+	public static byte[] encrypt(byte[] data, byte[] publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException {
+		// Génération des paramètres pour le chiffrement	 
+		PublicKey pubKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKey)); 
+		
+		// Initialisation du chiffrement
+		String cipherAlgorithm = "RSA";
+		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+		cipher.init(Cipher.ENCRYPT_MODE, pubKey);
+		 
+		return cipher.doFinal(data);
+		
+	} // encrypt ()
+	
+	public static byte[] testAuth (String username, String pass, byte[] challenge) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		// Génération des paramètres pour le chiffrement
+	    byte[] key = (username + pass).getBytes(); // + sel...
+	    MessageDigest sha = MessageDigest.getInstance("SHA-1");
+	    key = sha.digest(key);
+	    key = Arrays.copyOf(key, 16); // use only first 128 bit
+		SecretKey secretKey = new SecretKeySpec(key, "AES");
+							 
+		// Initialisation du chiffrement
+		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+		
+		String cipherAlgorithm = "AES/CTR/NoPadding";
+		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+		cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
+		return cipher.doFinal(challenge);
+		
+	} // testAuth ()
 
 } // Tools

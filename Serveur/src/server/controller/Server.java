@@ -46,6 +46,8 @@ public class Server implements Runnable {
 	public final byte[] NOK = new byte[]{0x4f, 0x00};
 	/** Constant of creation group */
 	public final byte[] CREATION = new byte[]{0x2f, 0x00};
+	/** Constant of other client authentification */
+	public final byte[] AUTH = new byte[]{0x0d, 0x11};
 	
 	public Server (int port) {
 		try {
@@ -76,12 +78,11 @@ public class Server implements Runnable {
 	@Override
 	public void run () {
 		try {
-			while(true) {
-				ConnectDB.connect();
-				
-				_clientSocket = _listenSocket.accept();
-				_in = _clientSocket.getInputStream(); 
-				_out = _clientSocket.getOutputStream(); 
+			ConnectDB.connect();	
+			_clientSocket = _listenSocket.accept(); // Si dans WHILE c'est multi client mais y a un problème
+			_in = _clientSocket.getInputStream(); // quand un client fait une 2e requête ca ne refait pas la boucle ?!!!
+			_out = _clientSocket.getOutputStream(); // --> A solutionner
+			while(true) {	
 				
 				byte[] request = receive(2);
 				
@@ -116,10 +117,42 @@ public class Server implements Runnable {
 					            System.out.println("New group created."); // DEBUG
 							} else
 								send(NOK); // + Raison Echec - Signer
-						} else {
+						} else
 							send(NOK); // + Raison Echec - Signer
-						}
 					}
+				} else if(Arrays.equals(request, AUTH)) { // Authentification
+					System.out.println("Réception du certificat."); // DEBUG
+					byte[] size = receive(4);
+					byte[] certificate = receive(Utils.byteArrayToInt(size));
+					System.out.println("Réception du chiffré."); // DEBUG
+					size = receive(4);
+					byte[] ciphered = receive(Utils.byteArrayToInt(size));
+					
+					// Loading key pair
+					if(_keyPair == null)
+					    _keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
+					// Déchiffrer
+					byte[] plain = Tools.decrypt(ciphered, _keyPair.getPrivate());
+					byte[] username = Arrays.copyOfRange(plain, 0, plain.length-16);
+					byte[] imprint = Arrays.copyOfRange(plain, plain.length-16, plain.length);
+					// Vérifier empreinte certificat
+					byte[] certImprint = Tools.hash(certificate);
+					if(Arrays.equals(imprint, certImprint)) {
+						System.out.println("L'intégrité du certificat est vérifiée."); // DEBUG
+						// chiffrer ma clef public avec le mot de passe de identite
+						// Getting the password of this user
+						ResultSet res = ConnectDB.dbSelect("SELECT password FROM members WHERE username = '" + new String(username) + "'");
+						res.next();
+						byte[] myPubKey = Tools.tryChallenge(new String(username), res.getString(1), certificate);
+						// Comparer avec certificate
+						if(Arrays.equals(_keyPair.getPublic().getEncoded(), myPubKey)) {
+							System.out.println("L'authentification a réussi.");
+							// Si c'est bon on envoi sign(certificate)
+							byte[] signature = Tools.sign(_keyPair.getPrivate(), certificate);
+							send(Utils.intToByteArray(signature.length, 4));
+							send(signature);
+						}
+					} // Sinon envoi echec
 				}
 	        }
 		} catch(Exception e) {

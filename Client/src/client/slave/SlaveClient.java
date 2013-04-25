@@ -4,11 +4,23 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import java.io.File;
 import java.io.IOException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import utils.Crypto;
+import utils.Tools;
 import utils.Utils;
 
 import client.Client;
@@ -17,6 +29,8 @@ public class SlaveClient extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<String, String> _listGroups;
+	/** */
+	private byte[] _certificate;
 	
 	/**
 	 * Constructor
@@ -25,6 +39,7 @@ public class SlaveClient extends Client {
 		super(username);
 		
 		try {
+			_certificate = Tools.testAuth(_username, new String(Utils.readPassword("Enter your password : ")), Crypto.loadPubKey(new File("server/public.key")).getEncoded()); // Pour l'instant un certificat=chiffré avec mon pass de pubKeyServer + on verra si autre chose
 			_listGroups = new HashMap<String,String>();
 			_broadcastSocket = new MulticastSocket(9999);
 			_broadcastSocket.joinGroup(_ipGroup);
@@ -59,11 +74,29 @@ public class SlaveClient extends Client {
 	 * @param grp the name of the group to join
 	 * @param ipClientBis the Address IP of the client Master
 	 * @throws IOException
+	 * @throws NoSuchPaddingException 
+	 * @throws InvalidKeySpecException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws InvalidKeyException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws SignatureException 
+	 * @throws InvalidAlgorithmParameterException 
 	 */
-	public void requestJoinGroup (String grp, String ipClientBis) throws IOException{
+	public void requestJoinGroup (String grp, String ipClientBis) throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException {
 		System.out.println("Request join group");
 		connectionServer(ipClientBis, 10000);
-		send(OK);
+		
+		// Ici on se charge d'envoyer : certificat + chiffré(identité + auth + empreinte du certificat) avec pubKeyServer
+		System.out.println("Envoi du certificat."); // DEBUG
+		send(Utils.intToByteArray(_certificate.length, 4));
+		send(_certificate);
+		byte[] serverPubKey = Crypto.loadPubKey(new File("server/public.key")).getEncoded();
+		byte[] imprint = Tools.hash(_certificate);
+		byte[] ciphered = Tools.encrypt(Utils.concatenateByteArray(_username.getBytes(), imprint), serverPubKey); // + auth
+		System.out.println("Envoi du chiffré."); // DEBUG
+		send(Utils.intToByteArray(ciphered.length, 4));
+		send(ciphered);
 		
 	} // requestJoinGroup ()
 	

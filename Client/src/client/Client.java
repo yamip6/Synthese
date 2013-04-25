@@ -44,9 +44,7 @@ public class Client {
 	protected InetAddress _ipGroup; // trial, his value is written in the source code => the clientMaster and the clients may choose one ? We'll see.
 	/** Broadcast socket for sending invitation to join group */
 	protected MulticastSocket _broadcastSocket;
-	
-	/** Current receiver's public key */
-	protected byte[] _pubKeyReceiver;
+
 	/** User's key pair */
 	protected KeyPair _keyPair = null;
 
@@ -56,6 +54,8 @@ public class Client {
 	public final byte[] NOK = new byte[]{0x4f, 0x00};
 	/** Constant of group creation */
 	public final byte[] CREATION = new byte[]{0x2f, 0x00};
+	/** Constant of other client authentification */
+	public final byte[] AUTH = new byte[]{0x0d, 0x11};
 	
 	/**
 	 * Constructor

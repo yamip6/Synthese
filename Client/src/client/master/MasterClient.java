@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -261,18 +263,46 @@ public class MasterClient extends Client {
 	/**
 	 * 
 	 * @throws IOException
+	 * @throws ClassNotFoundException 
+	 * @throws NoSuchPaddingException 
+	 * @throws InvalidKeySpecException 
+	 * @throws SignatureException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws InvalidKeyException 
 	 */
-	public void receiveClient () throws IOException {
-		byte[] data = new byte[2];
-		
+	public void receiveClient () throws IOException, ClassNotFoundException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, InvalidKeySpecException, NoSuchPaddingException {	
 		_tmpListenSocket = new ServerSocket(10000);
 		
 		while(_loop) {
 			_tmpSocket = _tmpListenSocket.accept();
 			_tmpIn = _tmpSocket.getInputStream();
+			System.out.println("Réception du certificat."); // DEBUG
+			byte[] data = new byte[4];
 			_tmpIn.read(data);
+			byte[] certificate = new byte[Utils.byteArrayToInt(data)];
+			_tmpIn.read(certificate);
+			System.out.println("Réception du chiffré."); // DEBUG
+			_tmpIn.read(data);
+			byte[] ciphered = new byte[Utils.byteArrayToInt(data)];
+			_tmpIn.read(ciphered);
+			
+			System.out.println("Demande d'autorisation au serveur."); // DEBUG
+			send(AUTH);
+			System.out.println("Transmission du certificat.");
+			send(Utils.intToByteArray(certificate.length, 4));
+			send(certificate);
+			System.out.println("Transmission du chiffré.");
+			send(Utils.intToByteArray(ciphered.length, 4));
+			send(ciphered);
+			System.out.println("Réception de la signature.");
+			byte[] size = receive(4); // Receive à blanc sinon problème je sais pas pourquoi !!!
+			size = receive(4);
+			byte[] cerificateSigned = receive(Utils.byteArrayToInt(size));
+			System.out.println(cerificateSigned.length);
+			boolean ok = Tools.verifSign(certificate, _publicKey, cerificateSigned);
+			
 			System.out.println(_tmpSocket.getInetAddress()); // DEBUG
-			if(Arrays.equals(data, OK) && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
+			if(ok && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
 				_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
 				_socketList.add(_tmpSocket); // Record the client
 				MasterClientGUI.get_chat().refresh();

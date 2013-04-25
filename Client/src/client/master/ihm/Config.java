@@ -1,5 +1,6 @@
 package client.master.ihm;
 
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JButton;
@@ -10,6 +11,10 @@ import java.awt.event.ActionEvent;
 import java.awt.Color;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 
 import client.master.MasterClient;
 
@@ -83,7 +88,7 @@ public class Config extends JPanel {
 							try {
 								MasterClientGUI.get_master().invitation(_groupName.getText());
 								MasterClientGUI.get_master().receiveClient();
-							} catch (IOException | InterruptedException e) {
+							} catch (IOException | InterruptedException | InvalidKeyException | ClassNotFoundException | NoSuchAlgorithmException | SignatureException | InvalidKeySpecException | NoSuchPaddingException e) {
 								e.printStackTrace();
 							}
 							
