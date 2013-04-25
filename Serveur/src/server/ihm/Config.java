@@ -33,7 +33,6 @@ public class Config extends JPanel {
         _port = new JTextField();
         _port.setBounds(215, 50, 114, 20);
         add(_port);
-        _port.setColumns(10);
         
         JButton btnLaunchServer = new JButton("Launch server");
         btnLaunchServer.addActionListener(new ActionListener() {

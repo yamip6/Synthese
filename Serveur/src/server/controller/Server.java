@@ -54,10 +54,11 @@ public class Server implements Runnable {
 			_groupList = new ArrayList<String>();
 			// Verifying the existence of a key pair
 			// Backup if necessary (if only one file is missing regenerating all)
-				if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
-					Tools.keyGenerator();
+			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
+				Tools.keyGenerator();
 			startServer(port);
 			_clientThread = new Thread(this);
+			ConnectDB.connect();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -78,14 +79,12 @@ public class Server implements Runnable {
 	@Override
 	public void run () {
 		try {
-			ConnectDB.connect();	
-			_clientSocket = _listenSocket.accept(); // Si dans WHILE c'est multi client mais y a un problème
-			_in = _clientSocket.getInputStream(); // quand un client fait une 2e requête ca ne refait pas la boucle ?!!!
-			_out = _clientSocket.getOutputStream(); // --> A solutionner
-			while(true) {	
-				
-				byte[] request = receive(2);
-				
+			while(true) {
+				_clientSocket = _listenSocket.accept(); // Si dans WHILE c'est multi client mais y a un problème
+				_in = _clientSocket.getInputStream(); // quand un client fait une 2e requête ca ne refait pas la boucle ?!!!
+				_out = _clientSocket.getOutputStream();
+
+				byte[] request = receive(2);				
 				if(Arrays.equals(request, CREATION)) { // Création
 					if(identityControl()) {					
 						byte[] size = receive(4);
@@ -120,7 +119,9 @@ public class Server implements Runnable {
 						} else
 							send(NOK); // + Raison Echec - Signer
 					}
-				} else if(Arrays.equals(request, AUTH)) { // Authentification
+				}
+				request = receive(2);
+				if(Arrays.equals(request, AUTH)) { // Authentification
 					System.out.println("Réception du certificat."); // DEBUG
 					byte[] size = receive(4);
 					byte[] certificate = receive(Utils.byteArrayToInt(size));
