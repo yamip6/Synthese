@@ -80,8 +80,8 @@ public class Server implements Runnable {
 	public void run () {
 		try {
 			while(true) {
-				_clientSocket = _listenSocket.accept(); // Si dans WHILE c'est multi client mais y a un problème
-				_in = _clientSocket.getInputStream(); // quand un client fait une 2e requête ca ne refait pas la boucle ?!!!
+				_clientSocket = _listenSocket.accept(); 
+				_in = _clientSocket.getInputStream();
 				_out = _clientSocket.getOutputStream();
 
 				byte[] request = receive(2);				
@@ -96,28 +96,41 @@ public class Server implements Runnable {
 						byte[] signature = receive(Utils.byteArrayToInt(size));
 						boolean result = Tools.verifSign(Utils.concatenateByteArray(username, grpName), _publicKey, signature);
 									
-						if(result && !_groupList.contains(new String(grpName))) { // Et test authentification
+						if(result && !_groupList.contains(new String(grpName))) {
 							send(OK);
+							
+							// Loading key pair
+							if(_keyPair == null)
+							    _keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
+							signature = Tools.sign(_keyPair.getPrivate(), OK);
+				            send(Utils.intToByteArray(signature.length, 4));
+				            send(signature);
 							// Getting the password of this user
 							ResultSet res = ConnectDB.dbSelect("SELECT password FROM members WHERE username = '" + new String(username) + "'");
 							res.next();
 							
+							// Sending the challenge to authentificate the user
 							byte[] tmpChallenge = Tools.getChallenge();
 							byte[] challenge = Tools.testAuth(new String(username), res.getString(1), tmpChallenge);
 							send(Utils.intToByteArray(challenge.length, 4));
 							send(challenge);
-							
+							signature = Tools.sign(_keyPair.getPrivate(), challenge);
+							send(Utils.intToByteArray(signature.length, 4));
+				            send(signature);
+				            
 							size = receive(4);
 							byte[] tmpChallengeR = receive(Utils.byteArrayToInt(size));
 							if(Arrays.equals(tmpChallenge, tmpChallengeR)) {						
 								_groupList.add(new String(grpName));
-								send(OK); // A signer
-					            send(Utils.intToByteArray(grpName.length, 4));
+								send(OK);
+								signature = Tools.sign(_keyPair.getPrivate(), OK);
+					            send(Utils.intToByteArray(signature.length, 4));
+					            send(signature);
 					            System.out.println("New group created."); // DEBUG
 							} else
-								send(NOK); // + Raison Echec - Signer
+								send(NOK);
 						} else
-							send(NOK); // + Raison Echec - Signer
+							send(NOK);
 					}
 				}
 				request = receive(2);
@@ -129,9 +142,6 @@ public class Server implements Runnable {
 					size = receive(4);
 					byte[] ciphered = receive(Utils.byteArrayToInt(size));
 					
-					// Loading key pair
-					if(_keyPair == null)
-					    _keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
 					// Déchiffrer
 					byte[] plain = Tools.decrypt(ciphered, _keyPair.getPrivate());
 					byte[] username = Arrays.copyOfRange(plain, 0, plain.length-16);
@@ -148,12 +158,19 @@ public class Server implements Runnable {
 						// Comparer avec certificate
 						if(Arrays.equals(_keyPair.getPublic().getEncoded(), myPubKey)) {
 							System.out.println("L'authentification a réussi.");
+							send(OK);
+							byte[] signature = Tools.sign(_keyPair.getPrivate(), OK);
+				            send(Utils.intToByteArray(signature.length, 4));
+				            send(signature);
 							// Si c'est bon on envoi sign(certificate)
-							byte[] signature = Tools.sign(_keyPair.getPrivate(), certificate);
+							signature = Tools.sign(_keyPair.getPrivate(), certificate);
 							send(Utils.intToByteArray(signature.length, 4));
 							send(signature);
+						} else {
+							System.out.println("L'utilisateur n'a pu etre authentifié.");
+							send(NOK);
 						}
-					} // Sinon envoi echec
+					}
 				}
 	        }
 		} catch(Exception e) {

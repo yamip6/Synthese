@@ -106,12 +106,26 @@ public class MasterClient extends Client {
 	 * @throws BadPaddingException 
 	 * @throws IllegalBlockSizeException 
 	 * @throws InvalidKeyException 
+	 * @throws InvalidKeySpecException 
+	 * @throws SignatureException 
 	 */
-	public Boolean responseGroupCreation ()throws IOException, ClassNotFoundException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException {
+	public Boolean responseGroupCreation ()throws IOException, ClassNotFoundException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException, InvalidKeySpecException {
 		byte[] response = receive(2);
 		if(Arrays.equals(response, OK)) {
-		    byte[] size = receive(4);
-		    byte[] challenge = receive(Utils.byteArrayToInt(size));	    
+			byte[] size = receive(4);
+	        byte[] signature = receive(Utils.byteArrayToInt(size));
+	        if(!Tools.verifSign(OK, _publicKey, signature)) {
+	        	System.out.println("Erreur dans la signature.");
+	        	return false;
+	        }
+		    size = receive(4);
+		    byte[] challenge = receive(Utils.byteArrayToInt(size));
+		    size = receive(4);
+	        signature = receive(Utils.byteArrayToInt(size));
+	        if(!Tools.verifSign(challenge, _publicKey, signature)) {
+	        	System.out.println("Erreur dans la signature.");
+	        	return false;
+	        }
 		    byte[] answer = Tools.tryChallenge(_username, new String(Utils.readPassword("Enter your password : ")), challenge);
 		    
 		    send(Utils.intToByteArray(answer.length, 4));
@@ -120,14 +134,21 @@ public class MasterClient extends Client {
 		    response = receive(2);
 			if(Arrays.equals(response, OK)) {
 		        System.out.println("Response OK."); // DEBUG
-		        return true;
-			} else if(Arrays.equals(response, NOK))
-				// + Raison Echec - Signature
+		        size = receive(4);
+		        signature = receive(Utils.byteArrayToInt(size));
+		        if(Tools.verifSign(OK, _publicKey, signature))
+		            return true;
+		        else {
+		        	System.out.println("Erreur dans la signature.");
+		        }
+			} else if(Arrays.equals(response, NOK)) {
+				System.out.println("L'authentification a échoué.");
 			    return false;
-		} else if(Arrays.equals(response, NOK))
-			// + Raison Echec - Signature
+			}
+		} else if(Arrays.equals(response, NOK)) {
+			System.out.println("Le groupe souhaité existe déjà (ou erreur dans la signature)");
 		    return false;
-		
+		}
 		return false;
 		
 	} // responseGroupCreation ()
@@ -294,20 +315,26 @@ public class MasterClient extends Client {
 			System.out.println("Transmission du chiffré.");
 			send(Utils.intToByteArray(ciphered.length, 4));
 			send(ciphered);
-			System.out.println("Réception de la signature.");
-			byte[] size = receive(4); // Receive à blanc sinon problème je sais pas pourquoi !!!
-			size = receive(4);
-			byte[] cerificateSigned = receive(Utils.byteArrayToInt(size));
-			System.out.println(cerificateSigned.length);
-			boolean ok = Tools.verifSign(certificate, _publicKey, cerificateSigned);
-			
-			System.out.println(_tmpSocket.getInetAddress()); // DEBUG
-			if(ok && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
-				_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
-				_socketList.add(_tmpSocket); // Record the client
-				MasterClientGUI.get_chat().refresh();
-				System.out.println("Client added");	// DEBUG
-			} 
+			byte[] result = receive(2);
+			if(Arrays.equals(OK, result)) {
+				byte[] size = receive(4);
+				byte[] signature = receive(Utils.byteArrayToInt(size));
+				if(!Tools.verifSign(OK, _publicKey, signature))
+					return;
+				System.out.println("Réception de la signature.");
+				size = receive(4);
+				byte[] cerificateSigned = receive(Utils.byteArrayToInt(size));
+				boolean ok = Tools.verifSign(certificate, _publicKey, cerificateSigned);
+				
+				System.out.println(_tmpSocket.getInetAddress()); // DEBUG
+				if(ok && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
+					_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
+					_socketList.add(_tmpSocket); // Record the client
+					MasterClientGUI.get_chat().refresh();
+					System.out.println("Client added");	// DEBUG
+				}
+			} else if(Arrays.equals(NOK, result))
+				System.out.println("L'utilisateur n'a pu etre authentifié.");
 		}
 		
 	} // receiveClient ()
