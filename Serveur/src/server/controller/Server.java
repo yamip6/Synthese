@@ -76,9 +76,10 @@ public class Server implements Runnable {
 	public void run () { 
 		try {
 			while(true) {
-			// Thread for a new client
-			_clientSocket = _listenSocket.accept(); 
-			new Services(_clientSocket);}
+				// Thread for a new client
+				_clientSocket = _listenSocket.accept(); 
+				new Services(_clientSocket);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -86,7 +87,7 @@ public class Server implements Runnable {
 	} // run ()
 	
 	/**
-	 * Method which offers services for the differents clients
+	 * Class which offers services for the differents clients
 	 */
 	private class Services implements Runnable {
         Socket socket;
@@ -99,33 +100,33 @@ public class Server implements Runnable {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
+		} // Services ()
 		
 		@Override
 		public void run() {
-		try {
-			
-			while(true) {
-				byte[] request = receive(2);				
-				if(Arrays.equals(request, CREATION)) { // Création
-					if(identityControl())
-						groupCreation();
-				}
-				else if(Arrays.equals(request, AUTH)) { // Authentication
-					slaveAuthentication();
-				}
-	        }
-		} catch(Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				disconnection();
-			} catch (IOException e) {
+			try {		
+				while(true) {
+					byte[] request = receive(2);				
+					if(Arrays.equals(request, CREATION)) { // Création
+						if(identityControl())
+							groupCreation();
+					}
+					else if(Arrays.equals(request, AUTH)) { // Authentication
+						slaveAuthentication();
+					}
+		        }
+			} catch(Exception e) {
 				e.printStackTrace();
+			} finally {
+				try {
+					disconnection();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-		}
-		}
-	} // run ()
+		} // run ()
+		
+	} // Services
 	
 	/**
 	 * Method which realize the identity control between server and client bis
