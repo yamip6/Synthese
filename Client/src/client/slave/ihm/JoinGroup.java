@@ -15,9 +15,13 @@ import java.util.HashMap;
 @SuppressWarnings("serial")
 public class JoinGroup extends JPanel {
 	
+	/** */
 	private JTable _table;
+	/** */
 	private TableModel _modele;
+	/** */
 	private HashMap<String, String> _listGroups;
+	/** */
 	private JScrollPane scrollPane;
 	
     /**
@@ -30,11 +34,10 @@ public class JoinGroup extends JPanel {
         setLayout(null);               
         
         _listGroups = new HashMap<String,String>();
-        _modele = new TableModel(_listGroups);
-        _table = new JTable(_modele); // Pour Yassine
         
+        _modele = new TableModel(_listGroups);
+        _table = new JTable(_modele);
         _table.setBounds(85, 42, 316, 144);
-        _table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(_table);
         scrollPane.setBounds(85, 42, 316, 144);
         add(scrollPane, BorderLayout.CENTER);      
@@ -44,12 +47,12 @@ public class JoinGroup extends JPanel {
         	@Override
         	public void actionPerformed (ActionEvent e) {
         		try {
-        			// MAJ de la JTable dans config
+        			// Getting the selected row
         			int rowSelectionned = _table.getSelectedRow();
         			String ip = (String) _table.getValueAt(rowSelectionned, 0);
         			String grp = (String) _table.getValueAt(rowSelectionned, 1);
    
-        			SlaveClientGUI.get_slave().requestJoinGroup(grp, ip); // devrait rendre un booleen avec raison echec
+        			SlaveClientGUI.get_slave().requestJoinGroup(grp, ip); // devrait rendre un booleen avec raison echec !!!
         			
         			SlaveClientGUI.get_slave().linkNeighboor();
 				} catch (Exception e1) {

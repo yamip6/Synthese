@@ -45,9 +45,13 @@ public class Server {
 	public final byte[] NOK = new byte[]{0x4f, 0x00};
 	/** Constant of creation group */
 	public final byte[] CREATION = new byte[]{0x2f, 0x00};
-	/** Constant of other client authentification */
+	/** Constant of other client Authentication */
 	public final byte[] AUTH = new byte[]{0x0d, 0x11};
 	
+	/**
+	 * Constructor
+	 * @param port is the listening port of the server
+	 */
 	public Server (int port) {
 		try {
 			_groupList = new ArrayList<String>();
@@ -65,6 +69,9 @@ public class Server {
 		
 	} // Server ()
 	
+	/**
+	 * Method which offers services for the differents clients
+	 */
 	public void services () {
 		try {
 			// Thread for a new client
@@ -78,8 +85,8 @@ public class Server {
 					if(identityControl())
 						groupCreation();
 				}
-				else if(Arrays.equals(request, AUTH)) { // Authentification
-					slaveAuthentification();
+				else if(Arrays.equals(request, AUTH)) { // Authentication
+					slaveAuthentication();
 				}
 	        }
 		} catch(Exception e) {
@@ -236,7 +243,7 @@ public class Server {
 			res.next();
 			
 			// Sending the challenge to authentificate the user
-			System.out.println("Sending the challenge for authentification."); // DEBUG
+			System.out.println("Sending the challenge for Authentication."); // DEBUG
 			byte[] tmpChallenge = Tools.getChallenge();
 			byte[] challenge = Tools.decryptWithPass(new String(username), res.getString(1), tmpChallenge);
 			send(Utils.intToByteArray(challenge.length, 4));
@@ -245,7 +252,7 @@ public class Server {
 			send(Utils.intToByteArray(signature.length, 4));
             send(signature);
             
-            // Verifying the authentification
+            // Verifying the Authentication
 			size = receive(4);
 			byte[] tmpChallengeR = receive(Utils.byteArrayToInt(size));
 			if(Arrays.equals(tmpChallenge, tmpChallengeR)) {						
@@ -266,7 +273,7 @@ public class Server {
 		
 	} // groupCreation ()
 	
-	public void slaveAuthentification () throws Exception {
+	public void slaveAuthentication () throws Exception {
 		System.out.println("Receiving the certificate."); // DEBUG
 		byte[] size = receive(4);
 		byte[] certificate = receive(Utils.byteArrayToInt(size));
@@ -279,7 +286,7 @@ public class Server {
 		byte[] plain = Tools.decrypt(ciphered, _keyPair.getPrivate());
 		byte[] username = Arrays.copyOfRange(plain, 0, plain.length-16);					
 		byte[] imprint = Arrays.copyOfRange(plain, plain.length-16, plain.length);
-		System.out.println("Authentification of : " + new String(username)); // DEBUG
+		System.out.println("Authentication of : " + new String(username)); // DEBUG
 		// Verifying the imprint of the certificate
 		byte[] certImprint = Tools.hash(certificate);
 		if(Arrays.equals(imprint, certImprint)) {
@@ -288,7 +295,7 @@ public class Server {
 			ResultSet res = ConnectDB.dbSelect("SELECT password FROM members WHERE username = '" + new String(username) + "'");
 			res.next();
 			// Decrypting the certificate with the password of the user who want authentificate
-			byte[] myPubKey = Tools.encyptWithPass(new String(username), res.getString(1), certificate);
+			byte[] myPubKey = Tools.encryptWithPass(new String(username), res.getString(1), certificate);
 			// Compare the certificates
 			if(Arrays.equals(_keyPair.getPublic().getEncoded(), myPubKey)) {
 				System.out.println("The authentication was successful.\n"); // DEBUG
@@ -309,7 +316,7 @@ public class Server {
 			send(NOK);
 		}
 		
-	} // slaveAuthentification ()
+	} // slaveAuthentication ()
 	
 	/**
 	 * Method which permit to start the server's listening

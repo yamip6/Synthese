@@ -16,8 +16,8 @@ import java.util.ArrayList;
 public class ChatStart extends JPanel {
 
 	private TableModelMaster _modele;
-	private JTable			 _table;
-	private JScrollPane      _scrollPane;
+	private JTable _table;
+	private JScrollPane _scrollPane;
 	
 	/**
      * Constructor
@@ -31,7 +31,6 @@ public class ChatStart extends JPanel {
         _modele = new TableModelMaster(new ArrayList<String>());
         _table = new JTable(_modele);      
         _table.setBounds(85, 42, 316, 144);
-        _table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         _scrollPane = new JScrollPane(_table);
         _scrollPane.setBounds(77, 11, 316, 144);
         add(_scrollPane, BorderLayout.CENTER);      
@@ -56,18 +55,19 @@ public class ChatStart extends JPanel {
         		
         	} // actionPerformed ()
         });
-        btnLaunchServer.setBounds(161, 171, 118, 59);
+        btnLaunchServer.setBounds(165, 183, 118, 59);
         add(btnLaunchServer);             
             
     } // ChatStart ()
     
     /**
-     * Call it to update JTable
+     * Call it to update the JTable
      */
     public void refresh () {
 		_modele = new TableModelMaster(MasterClientGUI.get_master().get_acceptedClients());
         _table.setModel(_modele);
         _modele.fireTableDataChanged();
+        
     } // refresh ()
     
 } // ChatStart

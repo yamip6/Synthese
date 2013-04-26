@@ -174,7 +174,7 @@ public class Tools {
 	 * @throws NoSuchAlgorithmException
 	 * @throws NoSuchPaddingException
 	 */
-	public static byte[] encyptWithPass (String username, String pass, byte[] challenge) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException {
+	public static byte[] encryptWithPass (String username, String pass, byte[] challenge) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException {
 		// Generating parameters for encryption
 	    byte[] key = (username + pass).getBytes(); // + sel...
 	    MessageDigest sha = MessageDigest.getInstance("SHA-1");

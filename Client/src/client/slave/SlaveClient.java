@@ -4,20 +4,11 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import java.io.File;
 import java.io.IOException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import utils.Crypto;
 import utils.Tools;
@@ -29,7 +20,7 @@ public class SlaveClient extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<String, String> _listGroups;
-	/** */
+	/** Disposable certificate of a client */
 	private byte[] _certificate;
 	
 	/**
@@ -39,7 +30,7 @@ public class SlaveClient extends Client {
 		super(username);
 		
 		try {
-			_certificate = Tools.testAuth(_username, new String(Utils.readPassword("Enter your password : ")), Crypto.loadPubKey(new File("server/public.key")).getEncoded()); // Pour l'instant un certificat=chiffré avec mon pass de pubKeyServer + on verra si autre chose
+			_certificate = Tools.encryptWithPass(_username, new String(Utils.readPassword("Enter your password : ")), Crypto.loadPubKey(new File("server/public.key")).getEncoded()); // Pour l'instant un certificat=chiffré avec mon pass de pubKeyServer + on verra si autre chose
 			_listGroups = new HashMap<String,String>();
 			_broadcastSocket = new MulticastSocket(9999);
 			_broadcastSocket.joinGroup(_ipGroup);
@@ -54,18 +45,16 @@ public class SlaveClient extends Client {
 	 * @throws IOException
 	 */
 	public void receiveInvitation () throws IOException {
-		assert(_listGroups != null);
-		
+		// Receiving a broadcast invitation
 		byte[] receiveDtg = new byte[1024];
 		DatagramPacket invitation;
 		invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
 		_broadcastSocket.receive(invitation);
 		byte[] grpInvitation = invitation.getData();
-		System.out.println(invitation.getAddress()); // DEBUG
+		System.out.println("Receiving invitation : " + invitation.getAddress()); // DEBUG
+		// Verifying if this group has already been created
 		if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation))))
 			_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
-		
-		assert(_listGroups.size() > 0);
 		
 	} // receiveInvitation ()
 	
@@ -73,28 +62,20 @@ public class SlaveClient extends Client {
 	 * Following process invitation. The client choose among groups in listGroups he's interested, the group to join
 	 * @param grp the name of the group to join
 	 * @param ipClientBis the Address IP of the client Master
-	 * @throws IOException
-	 * @throws NoSuchPaddingException 
-	 * @throws InvalidKeySpecException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws InvalidKeyException 
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws SignatureException 
-	 * @throws InvalidAlgorithmParameterException 
+	 * @throws Exception
 	 */
-	public void requestJoinGroup (String grp, String ipClientBis) throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException {
-		System.out.println("Request join group");
+	public void requestJoinGroup (String grp, String ipClientBis) throws Exception {
+		System.out.println("Request join group"); // DEBUG
 		connectionServer(ipClientBis, 10000);
 		
-		// Ici on se charge d'envoyer : certificat + chiffré(identité + auth + empreinte du certificat) avec pubKeyServer
-		System.out.println("Envoi du certificat."); // DEBUG
+		// Here we have to send : certificate + encrypt(identity + auth + certificate's footprint) with pubKeyServer
+		System.out.println("Sending the certificate."); // DEBUG
 		send(Utils.intToByteArray(_certificate.length, 4));
 		send(_certificate);
 		byte[] serverPubKey = Crypto.loadPubKey(new File("server/public.key")).getEncoded();
 		byte[] imprint = Tools.hash(_certificate);
 		byte[] ciphered = Tools.encrypt(Utils.concatenateByteArray(_username.getBytes(), imprint), serverPubKey); // + auth
-		System.out.println("Envoi du chiffré."); // DEBUG
+		System.out.println("Sending the encrypted.\n"); // DEBUG
 		send(Utils.intToByteArray(ciphered.length, 4));
 		send(ciphered);
 		
@@ -106,15 +87,17 @@ public class SlaveClient extends Client {
 	 * @throws Exception 
 	 */
 	public void linkNeighboor () throws Exception {
+		System.out.println("Linking neighboor."); // DEBUG
+		// Receiving the ip list of the ring (for this group)
 		_inServer = _clientSocket.getInputStream();
 		byte[] data = receive(1024);
-		System.out.println("Liaison au voisin...");
-		ArrayList<String> listIps = Utils.byteArrayToList(data); // DERNIERE ERREUR DU PROGRAMME !!!!
-		int pos;
+		ArrayList<String> listIps = Utils.byteArrayToList(data);
+		
 		// The client searchs its ip to determinate the ip following its own ip :
+		int pos;
 		if((pos = (listIps.indexOf(InetAddress.getLocalHost().getHostAddress()))) > -1){
 			connectionNeighboor(listIps.get(pos+1), _port);
-			System.out.println("Two clients linked !!!"); // DEBUG
+			System.out.println("I'm linked with my neighboor."); // DEBUG
 		}
 		else
 			throw new Exception("Ip doesn't exist in the list of accepted clients...");

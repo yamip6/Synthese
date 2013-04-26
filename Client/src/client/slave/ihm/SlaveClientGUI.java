@@ -47,7 +47,7 @@ public class SlaveClientGUI extends JFrame {
         _jgroup.setVisible(false);
         add(_jgroup);
         
-        // Composants graphique communs (de la fenêtre)
+     // Shared graphical components (of the window)
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         

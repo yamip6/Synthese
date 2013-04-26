@@ -80,7 +80,7 @@ public class ServerGUI extends JFrame {
 
     /**
      * Modifier
-     * @param server : The new server
+     * @param server is the new server
      */
 	public static void set_server (Server server) {
 		_server = server;

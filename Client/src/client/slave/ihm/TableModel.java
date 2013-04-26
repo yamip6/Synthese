@@ -9,12 +9,19 @@ import javax.swing.table.AbstractTableModel;
 @SuppressWarnings("serial")
 public class TableModel extends AbstractTableModel {
 	
+	/** */
 	private ArrayList<String> _listIp;
+	/** */
 	private ArrayList<String> _listGr;
 	
-	private final String[] entetes = {"Adresse(s) Ip(s)", "Groupe(s)"};
+	/** */
+	private final String[] headers = {"Creator(s)' ip(s)", "Group(s) name(s)"};
 	
-    public TableModel(HashMap<String, String> liste) {
+	/**
+	 * Constructor
+	 * @param liste
+	 */
+    public TableModel (HashMap<String, String> liste) {
     	_listIp = new ArrayList<String>();
 		_listGr = new ArrayList<String>();
 		for(Entry<String, String> entry : liste.entrySet()) {
@@ -22,25 +29,29 @@ public class TableModel extends AbstractTableModel {
 		    String valeur = entry.getValue();
 		    _listIp.add(cle); _listGr.add(valeur);
 		}
-    }
+		
+    } // TableModel ()
  
     @Override
-	public String getColumnName(int column) {
-		return entetes[column];
+	public String getColumnName (int column) {
+		return headers[column];
+		
 	} // getColumnName ()
     
     @Override
-	public int getColumnCount() {
-		return entetes.length;
+	public int getColumnCount () {
+		return headers.length;
+		
 	} // getColumnCount ()
 
 	@Override
-	public int getRowCount() {
+	public int getRowCount () {
 		return _listIp.size();
+		
 	} // getRowCount ()
 	
 	@Override
-	public Object getValueAt(int row, int col) {
+	public Object getValueAt (int row, int col) {
 		switch(col){
 			case 0:
 				return _listIp.get(row);
@@ -49,6 +60,7 @@ public class TableModel extends AbstractTableModel {
 			default:
 				return null;
 		}
+		
 	} // getValueAt ()
     
-}
+} // TableModel

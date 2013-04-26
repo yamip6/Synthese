@@ -28,11 +28,11 @@ public class Config extends JPanel {
         setLayout(null);               
         
         JLabel lblUserName = new JLabel("User name:");
-        lblUserName.setBounds(119, 62, 84, 14);
+        lblUserName.setBounds(127, 61, 84, 14);
         add(lblUserName);
         
         _username = new JTextField();
-        _username.setBounds(209, 59, 106, 20);
+        _username.setBounds(217, 58, 106, 20);
         add(_username);
         _username.setColumns(10);
         
@@ -44,10 +44,10 @@ public class Config extends JPanel {
         			SlaveClientGUI.set_slave(new SlaveClient(_username.getText()));
         		    Thread t = new Thread(new Runnable() {
         				@Override
-        				public void run () { // A mettre dans une boucle si plusieurs clientMaster à étudier
+        				public void run () { // A mettre dans une boucle si plusieurs clientMaster à étudier !!!
         					try {
         						SlaveClientGUI.get_slave().receiveInvitation();
-        						SlaveClientGUI._jgroup.refresh(); // MAJ du modèle de la JTable de JoinGroup et refresh
+        						SlaveClientGUI._jgroup.refresh(); // Updating the JTable
         					} catch (IOException e) {
         						e.printStackTrace();
         					}
@@ -64,7 +64,7 @@ public class Config extends JPanel {
         		
         	} // actionPerformed()
         });
-        btnLaunchServer.setBounds(162, 163, 114, 39);
+        btnLaunchServer.setBounds(171, 131, 122, 71);
         add(btnLaunchServer);                 
         
     } // Config ()    

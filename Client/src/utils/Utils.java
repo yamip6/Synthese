@@ -89,10 +89,11 @@ public class Utils {
 		
 		StringBuilder result = new StringBuilder();
 		for (String elem : l){
-			result.append(elem + ' '); // Je concatène chaque message
+			result.append(elem + ' '); // Concatenate each message
 		}
 		
 		return result.toString().getBytes();
+		
 	} // arrayListToByte ()
 	
 	/**
@@ -153,7 +154,15 @@ public class Utils {
 		
 	} // readPassword ()
 	
+	/**
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
+		try {
+            assert false;
+            throw new RuntimeException("JVM option '-ea'");
+        } catch (AssertionError e) {} 
 		
 		ArrayList<String> liste = new ArrayList<String>();
 		liste.add("Identifiant1");
@@ -169,9 +178,9 @@ public class Utils {
 			System.out.println("OK");
 			System.out.println(test);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
+		
+	} // main ()
 	
 } // Utils

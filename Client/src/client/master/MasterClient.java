@@ -84,56 +84,6 @@ public class MasterClient extends Client {
 		}
 		
 	} // requestGroupCreation ()
-
-	/**
-	 * Used by the client to know the response of the group's creation from the server
-	 * @param nameGroupWished is the name of the group the client wants
-	 * @return boolean
-	 * @throws Exception
-	 */
-	public Boolean responseGroupCreation () throws Exception {
-		byte[] response = receive(2);
-		if(Arrays.equals(response, OK)) {
-			byte[] size = receive(4);
-	        byte[] signature = receive(Utils.byteArrayToInt(size));
-	        if(!Tools.verifSign(OK, _publicKey, signature)) {
-	        	System.out.println("Erreur dans la signature.");
-	        	return false;
-	        }
-		    size = receive(4);
-		    byte[] challenge = receive(Utils.byteArrayToInt(size));
-		    size = receive(4);
-	        signature = receive(Utils.byteArrayToInt(size));
-	        if(!Tools.verifSign(challenge, _publicKey, signature)) {
-	        	System.out.println("Erreur dans la signature.");
-	        	return false;
-	        }
-		    byte[] answer = Tools.tryChallenge(_username, new String(Utils.readPassword("Enter your password : ")), challenge);
-		    
-		    send(Utils.intToByteArray(answer.length, 4));
-		    send(answer);
-		    
-		    response = receive(2);
-			if(Arrays.equals(response, OK)) {
-		        System.out.println("Response OK."); // DEBUG
-		        size = receive(4);
-		        signature = receive(Utils.byteArrayToInt(size));
-		        if(Tools.verifSign(OK, _publicKey, signature))
-		            return true;
-		        else {
-		        	System.out.println("Erreur dans la signature.");
-		        }
-			} else if(Arrays.equals(response, NOK)) {
-				System.out.println("L'authentification a échoué.");
-			    return false;
-			}
-		} else if(Arrays.equals(response, NOK)) {
-			System.out.println("Le groupe souhaité existe déjà (ou erreur dans la signature)");
-		    return false;
-		}
-		return false;
-		
-	} // responseGroupCreation ()
 	
 	/**
 	 * Method which realize the identity control between clientBis and server
@@ -251,6 +201,57 @@ public class MasterClient extends Client {
 		return false;
 		
 	} // changeRole ()
+	
+	/**
+	 * Used by the client to know the response of the group's creation from the server
+	 * @param nameGroupWished is the name of the group the client wants
+	 * @return boolean
+	 * @throws Exception
+	 */
+	public Boolean responseGroupCreation () throws Exception {
+		// Identity control response
+		byte[] response = receive(2);
+		if(Arrays.equals(response, OK)) {
+			System.out.println("Authentication."); // DEBUG
+			// Checking signature
+			byte[] size = receive(4);
+	        byte[] signature = receive(Utils.byteArrayToInt(size));
+	        if(!Tools.verifSign(OK, _publicKey, signature)) {
+	        	System.err.println("Signature error.");
+	        	return false;
+	        }
+	        // Receiving challenge of Authentication and check signature
+	        System.out.println("Receiving the challenge."); // DEBUG
+		    size = receive(4);
+		    byte[] challenge = receive(Utils.byteArrayToInt(size));
+		    size = receive(4);
+	        signature = receive(Utils.byteArrayToInt(size));
+	        if(!Tools.verifSign(challenge, _publicKey, signature)) {
+	        	System.err.println("Signature error.");
+	        	return false;
+	        }
+	        // Trying authentificate
+		    byte[] answer = Tools.decryptWithPass(_username, new String(Utils.readPassword("Enter your password : ")), challenge);
+		    send(Utils.intToByteArray(answer.length, 4));
+		    send(answer);
+		    
+		    // Authentication result
+		    response = receive(2);
+			if(Arrays.equals(response, OK)) {
+		        System.out.println("The Authentication was successful.\n"); // DEBUG
+		        size = receive(4);
+		        signature = receive(Utils.byteArrayToInt(size));
+		        if(Tools.verifSign(OK, _publicKey, signature))
+		            return true;
+		        else
+		        	System.err.println("Signature error."); // DEBUG
+			} else if(Arrays.equals(response, NOK)) 
+				System.err.println("Authentication failed."); // DEBUG
+		} else if(Arrays.equals(response, NOK))
+			System.err.println("This group already exist (or this is a wrong signature)."); // DEBUG
+		return false;
+		
+	} // responseGroupCreation ()
 
 	/**
 	 * Used by the client master to invite clients to join its group
@@ -264,54 +265,58 @@ public class MasterClient extends Client {
 		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, 9999);
 	    _broadcastSocket.send(toSend);
 		
-	} // Invitation ()
+	} // invitation ()
 	
 	/**
-	 * 
+	 * Method which permits to receive new clients in our group.
 	 * @throws Exception
 	 */
 	public void receiveClient () throws Exception {	
 		_tmpListenSocket = new ServerSocket(10000);
 		
 		while(_loop) {
+			// Receipt of requests (certificate|encrypted)
 			_tmpSocket = _tmpListenSocket.accept();
 			_tmpIn = _tmpSocket.getInputStream();
-			System.out.println("Réception du certificat."); // DEBUG
+			System.out.println("Receiving the certificate."); // DEBUG
 			byte[] data = new byte[4];
 			_tmpIn.read(data);
 			byte[] certificate = new byte[Utils.byteArrayToInt(data)];
 			_tmpIn.read(certificate);
-			System.out.println("Réception du chiffré."); // DEBUG
+			System.out.println("Receiving the encrypted."); // DEBUG
 			_tmpIn.read(data);
 			byte[] ciphered = new byte[Utils.byteArrayToInt(data)];
 			_tmpIn.read(ciphered);
 			
-			System.out.println("Demande d'autorisation au serveur."); // DEBUG
+			// Transferring data to the server
+			System.out.println("Authorization request to server."); // DEBUG
 			send(AUTH);
-			System.out.println("Transmission du certificat.");
+			System.out.println("Transfering the certificate."); // DEBUG
 			send(Utils.intToByteArray(certificate.length, 4));
 			send(certificate);
-			System.out.println("Transmission du chiffré.");
+			System.out.println("Transferring the encrypted."); // DEBUG
 			send(Utils.intToByteArray(ciphered.length, 4));
 			send(ciphered);
+			// Authentication result
 			byte[] result = receive(2);
 			if(Arrays.equals(OK, result)) {
 				byte[] size = receive(4);
 				byte[] signature = receive(Utils.byteArrayToInt(size));
-				if(!Tools.verifSign(OK, _publicKey, signature))
-					return; // + message
-				System.out.println("Réception de la signature.");
+				if(!Tools.verifSign(OK, _publicKey, signature)) {
+					System.err.println("Signature error."); // DEBUG
+					return;
+				}
+				System.out.println("The authentication was successful : " + _tmpSocket.getInetAddress()); // DEBUG
 				size = receive(4);
 				byte[] cerificateSigned = receive(Utils.byteArrayToInt(size));
 				boolean ok = Tools.verifSign(certificate, _publicKey, cerificateSigned);
-				
-				System.out.println(_tmpSocket.getInetAddress()); // DEBUG
 				if(ok && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
-					_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
+					_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of an enjoyed client is added in the ArrayList to create the ring
 					_socketList.add(_tmpSocket); // Record the client
 					MasterClientGUI.get_chat().refresh();
-					System.out.println("Client added");	// DEBUG + else message
-				}
+					System.out.println("A new client is added."); // DEBUG
+				} else
+					System.err.println("This client has already been added (or signature error)."); // DEBUG
 			} else if(Arrays.equals(NOK, result))
 				System.err.println("The user could not be authenticated (or The thumbprint of the certificate does not match)."); // DEBUG
 		}
