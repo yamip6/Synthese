@@ -11,17 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import utils.Crypto;
 import utils.Tools;
@@ -79,18 +70,18 @@ public class MasterClient extends Client {
 	 */
 	public void requestGroupCreation (String nameGroup) throws Exception {
 		send(CREATION);
-		
-		_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
-		
-		identityControl();
-		
-		send(Utils.intToByteArray(_username.getBytes().length, 4));
-		send(_username.getBytes());
-		send(Utils.intToByteArray(nameGroup.getBytes().length, 4));
-		send(nameGroup.getBytes());
-		byte[] signature = Tools.sign(_keyPair.getPrivate(), Utils.concatenateByteArray(_username.getBytes(), nameGroup.getBytes()));
-		send(Utils.intToByteArray(signature.length, 4));
-		send(signature);
+		// Loading key pair
+		_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));	
+		if(identityControl()) {
+			// Sending username|group and signature
+			send(Utils.intToByteArray(_username.getBytes().length, 4));
+			send(_username.getBytes());
+			send(Utils.intToByteArray(nameGroup.getBytes().length, 4));
+			send(nameGroup.getBytes());
+			byte[] signature = Tools.sign(_keyPair.getPrivate(), Utils.concatenateByteArray(_username.getBytes(), nameGroup.getBytes()));
+			send(Utils.intToByteArray(signature.length, 4));
+			send(signature);
+		}
 		
 	} // requestGroupCreation ()
 
@@ -98,18 +89,9 @@ public class MasterClient extends Client {
 	 * Used by the client to know the response of the group's creation from the server
 	 * @param nameGroupWished is the name of the group the client wants
 	 * @return boolean
-	 * @throws IOException
-	 * @throws ClassNotFoundException 
-	 * @throws NoSuchPaddingException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws InvalidAlgorithmParameterException 
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws InvalidKeyException 
-	 * @throws InvalidKeySpecException 
-	 * @throws SignatureException 
+	 * @throws Exception
 	 */
-	public Boolean responseGroupCreation ()throws IOException, ClassNotFoundException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException, InvalidKeySpecException {
+	public Boolean responseGroupCreation () throws Exception {
 		byte[] response = receive(2);
 		if(Arrays.equals(response, OK)) {
 			byte[] size = receive(4);
@@ -157,112 +139,116 @@ public class MasterClient extends Client {
 	 * Method which realize the identity control between clientBis and server
 	 * @throws Exception
 	 */
-	public void identityControl () throws Exception {
+	public boolean identityControl () throws Exception {
 		// MD5 hash of the public key
 		byte[] hash = Tools.hashFile("keys/public.key");
 		// Sending hash
-		System.out.println("Envoi de l'empreinte de la clef publique : " + Utils.byteArrayToHexString(hash)); // DEBUG
+		System.out.println("Sending the imprint of the public key : " + Utils.byteArrayToHexString(hash)); // DEBUG
 		send(Utils.intToByteArray(hash.length, 1));
 		send(hash);
 
 		// Hash result
 		byte[] verif = receive(2);
 		if(Arrays.equals(verif, OK)) {
-			System.out.println("Votre clef est déjà enregistrée auprès du destinataire (réceprion OK)."); // DEBUG
+			System.out.println("Your key is already registered with the recipient (receiving OK)."); // DEBUG
 			
-			System.out.println("Inversion des rôles."); // DEBUG
-			changeRole();
+			System.out.println("Role reversal.."); // DEBUG
+			return changeRole();
 		} else if(Arrays.equals(verif, NOK)) {
 			// Receiving the challenge
 			byte[] challengeR = receive(16);
-			System.out.println("Réception du challenge (réception NOK)."); // DEBUG
+			System.out.println("Receiving the challenge (receive NOK)."); // DEBUG
 
 			// Sending the public key and the signature public key/challenge
-			System.out.println("Envoi de la clef publique/signature."); // DEBUG
+			System.out.println("Sending the public key and the signature."); // DEBUG
 			byte[] pubKey = _keyPair.getPublic().getEncoded();
 			send(Utils.intToByteArray(pubKey.length, 4));
 			send(pubKey);
-						
+									
 			byte[] signature = Tools.sign(_keyPair.getPrivate(), Utils.concatenateByteArray(_keyPair.getPublic().getEncoded(), challengeR));
 			send(Utils.intToByteArray(signature.length, 4));
 			send(signature);
 
 			// Receiving the imprint
-			byte[] tailleHash = receive(1);
-			byte[] empreinte = receive(Utils.byteArrayToInt(tailleHash));
-			System.out.println("Enpreinte reçue : " + Utils.byteArrayToHexString(empreinte)); // DEBUG
+			byte[] hashSize = receive(1);
+			byte[] imprint = receive(Utils.byteArrayToInt(hashSize));
+			System.out.println("Imprint received : " + Utils.byteArrayToHexString(imprint));
 
 			// Comparison of imprints
-			System.out.println("Mon empreinte : " + Utils.byteArrayToHexString(hash)); // DEBUG
+			System.out.println("My imprint : " + Utils.byteArrayToHexString(hash));
 			// Footprints validation
-			if(Arrays.equals(empreinte, hash)) {
-				System.out.println("Les empreintes sont bien valides."); // DEBUG
+			if(Arrays.equals(imprint, hash)) {
+				System.out.println("Imprints are valid.");
 				send(OK);
 
-				System.out.println("Inversion des rôles."); // DEBUG
-				changeRole();
+				System.out.println("Role reversal."); // DEBUG
+				return changeRole();
 			} else {
-				System.out.println("Les empreintes reçue et réelle sont différentes."); // DEBUG
+				System.err.println("The received and real footprints are differents.");
 				send(NOK);
 			}
 		}
+		return false;
+		
 	} // identityControl ()
 	/**
 	 * Method which permit to change role during the identity control
 	 * @throws Exception
 	 */
-	public void changeRole () throws Exception {
-        // Receipt of hash of identity control
-		byte[] tailleHash = receive(1);
-		byte[] hash = receive(Utils.byteArrayToInt(tailleHash));
-		System.out.println("Réception du hash : " + Utils.byteArrayToHexString(hash)); // DEBUG
-		
+	public boolean changeRole () throws Exception {
+		// Receipt hash of identity control
+		byte[] hashSize = receive(1);
+		byte[] hash = receive(Utils.byteArrayToInt(hashSize));
+		System.out.println("Receive hash : " + Utils.byteArrayToHexString(hash)); // DEBUG
+				
 		// Hash check
 		if(Tools.isPubKeyStored(hash)) {
 			// Sending OK
 			_publicKey = Crypto.loadPubKey(new File("contacts/" + Utils.byteArrayToHexString(hash) + ".key")).getEncoded();
-			System.out.println("Vérification OK (envoie OK)."); // DEBUG
-			send(OK);
+			System.out.println("Checking OK (send OK).\n"); // DEBUG
+			send(OK);				
+			return true;
 			// End of the exchange
 		} else {
 			// Sending challenge
-			System.out.println("Envoie du challenge (envoie NOK)."); // DEBUG
+			System.out.println("Sending challenge (send NOK)."); // DEBUG
 			byte[] challenge = Tools.getChallenge();
 			send(NOK);
 			send(challenge);
-			
+					
 			// Receiving the public key and signature
-			System.out.println("Réception de la clef publique et de la signature."); // DEBUG
-			byte[] taillePubKey = receive(4);
-			_publicKey = receive(Utils.byteArrayToInt(taillePubKey));
-			byte[] tailleSign = receive(4);
-		    byte[] signature = receive(Utils.byteArrayToInt(tailleSign));
+			System.out.println("Receiving the public key and signature."); // DEBUG
+			byte[] pubKeySize = receive(4);
+			_publicKey = receive(Utils.byteArrayToInt(pubKeySize));
+			byte[] signSize = receive(4);
+			byte[] signature = receive(Utils.byteArrayToInt(signSize));
 
-		    // Signature check
-		    byte[] data = Utils.concatenateByteArray(_publicKey, challenge);
-		    boolean verif = Tools.verifSign(data, _publicKey, signature);
-		    if(verif) {
-		    	System.out.println("La vérification a réussie."); //DEBUG
-		    	
-		    	// Sending hash
-		    	System.out.println("Envoi du hash."); // DEBUG
-		    	byte[] empreinte = Tools.hash(_publicKey);
-		    	send(Utils.intToByteArray(empreinte.length, 1));
-		    	send(empreinte);
-		    	
-		    	// Imprint validation
-		    	byte[] valide = receive(2);
-		    	if(Arrays.equals(valide, OK)) {
-		    		System.out.println("Le serveur a validé l'empreinte."); // DEBUG
-		    	    // Saving the public key
-		    		System.out.println("Sauvegarde de la clé publique."); // DEBUG
-		    	    Utils.saveBuffer(_publicKey, new File("contacts/" + Utils.byteArrayToHexString(empreinte) + ".key"));
-		    	    // End of the exchange
-		    	} else if(Arrays.equals(valide, NOK))
-		    		System.out.println("Le serveur n'a pas validé l'empreinte."); //DEBUG
-		    } else 
-		    	System.out.println("La vérification a échouée."); // DEBUG
+			// Signature check
+			byte[] data = Utils.concatenateByteArray(_publicKey, challenge);
+			boolean check = Tools.verifSign(data, _publicKey, signature);
+			if(check) {
+				System.out.println("The verification successful."); //DEBUG
+				    	
+				// Sending hash
+				System.out.println("Sending hash."); // DEBUG
+				byte[] imprint = Tools.hash(_publicKey);
+				send(Utils.intToByteArray(imprint.length, 1));
+				send(imprint);
+				    	
+				// Imprint validation
+				byte[] valid = receive(2);
+				if(Arrays.equals(valid, OK)) {
+				    System.out.println("The client has validated the footprint."); // DEBUG
+				    // Saving the public key
+				    System.out.println("Saving the public key.\n"); // DEBUG
+				    Utils.saveBuffer(_publicKey, new File("contacts/" + Utils.byteArrayToHexString(imprint) + ".key"));		    	    
+				    return true;
+				} else if(Arrays.equals(valid, NOK))
+				    System.err.println("The client does not validate the impression."); //DEBUG
+			} else 
+				System.err.println("Verification failed."); // DEBUG
 		}	
+		return false;
 		
 	} // changeRole ()
 
@@ -276,22 +262,15 @@ public class MasterClient extends Client {
 		byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation we can use a key word as invitation !
 
 		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, 9999);
-
 	    _broadcastSocket.send(toSend);
 		
 	} // Invitation ()
 	
 	/**
 	 * 
-	 * @throws IOException
-	 * @throws ClassNotFoundException 
-	 * @throws NoSuchPaddingException 
-	 * @throws InvalidKeySpecException 
-	 * @throws SignatureException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws InvalidKeyException 
+	 * @throws Exception
 	 */
-	public void receiveClient () throws IOException, ClassNotFoundException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, InvalidKeySpecException, NoSuchPaddingException {	
+	public void receiveClient () throws Exception {	
 		_tmpListenSocket = new ServerSocket(10000);
 		
 		while(_loop) {
@@ -320,7 +299,7 @@ public class MasterClient extends Client {
 				byte[] size = receive(4);
 				byte[] signature = receive(Utils.byteArrayToInt(size));
 				if(!Tools.verifSign(OK, _publicKey, signature))
-					return;
+					return; // + message
 				System.out.println("Réception de la signature.");
 				size = receive(4);
 				byte[] cerificateSigned = receive(Utils.byteArrayToInt(size));
@@ -331,10 +310,10 @@ public class MasterClient extends Client {
 					_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of a enjoyed client is added in the ArrayList to create the ring
 					_socketList.add(_tmpSocket); // Record the client
 					MasterClientGUI.get_chat().refresh();
-					System.out.println("Client added");	// DEBUG
+					System.out.println("Client added");	// DEBUG + else message
 				}
 			} else if(Arrays.equals(NOK, result))
-				System.out.println("L'utilisateur n'a pu etre authentifié.");
+				System.err.println("The user could not be authenticated (or The thumbprint of the certificate does not match)."); // DEBUG
 		}
 		
 	} // receiveClient ()

@@ -31,6 +31,7 @@ public class Config extends JPanel {
         add(lblListeningPort);
         
         _port = new JTextField();
+        _port.setText("50000");
         _port.setBounds(215, 50, 114, 20);
         add(_port);
         
@@ -47,7 +48,7 @@ public class Config extends JPanel {
         		
         	} // actionPerformed ()
         });
-        btnLaunchServer.setBounds(159, 155, 120, 61);
+        btnLaunchServer.setBounds(167, 138, 134, 78);
         add(btnLaunchServer); 
         
     } // Config ()

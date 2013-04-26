@@ -13,7 +13,6 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -27,6 +26,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import java.util.Arrays;
 
 public class Tools {
 	/**
@@ -60,90 +61,6 @@ public class Tools {
 		Utils.saveBuffer(pubKey.getEncoded(), new File("keys/public.key"));
 		
 	} // keyGenerator ()
-	
-	public static byte[] tryChallenge (String username, String pass, byte[] challenge) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException {
-		// Génération des paramètres pour le chiffrement
-	    byte[] key = (username + pass).getBytes(); // + sel...
-	    MessageDigest sha = MessageDigest.getInstance("SHA-1");
-	    key = sha.digest(key);
-	    key = Arrays.copyOf(key, 16); // use only first 128 bit
-		SecretKey secretKey = new SecretKeySpec(key, "AES");
-							 
-		// Initialisation du chiffrement
-		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
-		
-		String cipherAlgorithm = "AES/CTR/NoPadding";
-		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
-		cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
-		return cipher.doFinal(challenge);
-		
-	} // tryChallenge ()
-	
-	public static byte[] testAuth (String username, String pass, byte[] challenge) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		// Génération des paramètres pour le chiffrement
-	    byte[] key = (username + pass).getBytes(); // + sel...
-	    MessageDigest sha = MessageDigest.getInstance("SHA-1");
-	    key = sha.digest(key);
-	    key = Arrays.copyOf(key, 16); // use only first 128 bit
-		SecretKey secretKey = new SecretKeySpec(key, "AES");
-							 
-		// Initialisation du chiffrement
-		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
-		
-		String cipherAlgorithm = "AES/CTR/NoPadding";
-		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
-		cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
-		return cipher.doFinal(challenge);
-		
-	} // testAuth ()
-	
-	/**
-	 * Method to determine whether a public key is already stored
-	 * @param hash : Hash of the public key
-	 * @return True if it is already stored, false otherwise
-	 */
-	public static boolean isPubKeyStored (byte[] hash) {
-		if(new File("contacts/" + Utils.byteArrayToHexString(hash) + ".key").exists())
-			return true;
-		return false;
-		
-	} // isPubKeyStored ()
-	
-	/**
-	 * Method for generating a random sequence of 16 bytes
-	 * @return The byte array resulting
-	 */
-	public static byte[] getChallenge () throws NoSuchAlgorithmException {
-		SecureRandom inst = SecureRandom.getInstance("SHA1PRNG");
-		byte buffer[] = new byte[16];
-		inst.nextBytes(buffer);
-		return buffer;
-		
-	} // getChallenge ()
-	
-	/**
-	 * Method to verify a signature SHA1WITHRSA
-	 * @param data : The data you want to check
-	 * @param publicKey : The public key of the sender
-	 * @param signature : The signature resulting
-	 * @return True if the signature is valid and false otherwise
-	 */
-	public static boolean verifSign (byte[] data, byte[] publicKey, byte[] signature) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException, NoSuchPaddingException, IOException {
-		PublicKey pubKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKey));
-		
-		String signAlgorithm = "SHA1WITHRSA";
-		Signature sign = Signature.getInstance(signAlgorithm);
-		sign.initVerify(pubKey);
-
-		sign.update(data);
-		
-		boolean signResult = sign.verify(signature);
-		if (signResult)
-		    return true;
-		else
-		    return false;
-		
-	} // verifSign ()
 	
 	/**
 	 * Method to perform a MD5 hash of a byte array
@@ -197,13 +114,123 @@ public class Tools {
 	} // sign ()
 	
 	/**
+	 * Method to verify a signature SHA1WITHRSA
+	 * @param data : The data you want to check
+	 * @param publicKey : The public key of the sender
+	 * @param signature : The signature resulting
+	 * @return True if the signature is valid and false otherwise
+	 */
+	public static boolean verifSign (byte[] data, byte[] publicKey, byte[] signature) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException, NoSuchPaddingException, IOException {
+		PublicKey pubKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKey));
+		
+		String signAlgorithm = "SHA1WITHRSA";
+		Signature sign = Signature.getInstance(signAlgorithm);
+		sign.initVerify(pubKey);
+
+		sign.update(data);
+		
+		boolean signResult = sign.verify(signature);
+		if (signResult)
+		    return true;
+		else
+		    return false;
+		
+	} // verifSign ()
+	
+	/**
+	 * Method to determine whether a public key is already stored
+	 * @param hash : Hash of the public key
+	 * @return True if it is already stored, false otherwise
+	 */
+	public static boolean isPubKeyStored (byte[] hash) {
+		if(new File("contacts/" + Utils.byteArrayToHexString(hash) + ".key").exists())
+			return true;
+		return false;
+		
+	} // isPubKeyStored ()
+	
+	/**
+	 * Method for generating a random sequence of 16 bytes
+	 * @return The byte array resulting
+	 */
+	public static byte[] getChallenge () throws NoSuchAlgorithmException {
+		SecureRandom inst = SecureRandom.getInstance("SHA1PRNG");
+		byte buffer[] = new byte[16];
+		inst.nextBytes(buffer);
+		return buffer;
+		
+	} // getChallenge ()
+	
+	/**
+	 * 
+	 * @param username
+	 * @param pass
+	 * @param challenge
+	 * @return
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws InvalidKeyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 */
+	public static byte[] encyptWithPass (String username, String pass, byte[] challenge) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException {
+		// Generating parameters for encryption
+	    byte[] key = (username + pass).getBytes(); // + sel...
+	    MessageDigest sha = MessageDigest.getInstance("SHA-1");
+	    key = sha.digest(key);
+	    key = Arrays.copyOf(key, 16); // use only first 128 bit
+		SecretKey secretKey = new SecretKeySpec(key, "AES");
+							 
+		// Encrypt initialization
+		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+		
+		String cipherAlgorithm = "AES/CTR/NoPadding";
+		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+		cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+		return cipher.doFinal(challenge);
+		
+	} // encyptWithPass ()
+	
+	/**
+	 * 
+	 * @param username
+	 * @param pass
+	 * @param challenge
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 */
+	public static byte[] decryptWithPass (String username, String pass, byte[] challenge) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		// Generating parameters for encryption
+	    byte[] key = (username + pass).getBytes(); // + sel...
+	    MessageDigest sha = MessageDigest.getInstance("SHA-1");
+	    key = sha.digest(key);
+	    key = Arrays.copyOf(key, 16); // use only first 128 bit
+		SecretKey secretKey = new SecretKeySpec(key, "AES");
+							 
+		// Encrypt Initialization
+		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+		
+		String cipherAlgorithm = "AES/CTR/NoPadding";
+		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+		cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
+		return cipher.doFinal(challenge);
+		
+	} // decryptWithPass ()
+	
+	/**
 	 * Méthode permettant d'effectuer un déchiffrement asymétrique RSA
 	 * @param data : Données que l'on souhaite déchiffrer
 	 * @param privKey : Clef privée utilisée pour le déchiffrement
 	 * @return Le tableau d'octets correspondant au message clair
 	 */
-	public static byte[] decrypt(byte[] data, PrivateKey privKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException {
-		// Initialisation du chiffrement
+	public static byte[] decrypt (byte[] data, PrivateKey privKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException {
+		// Encrypt initialisation
 		String cipherAlgorithm = "RSA";
 		Cipher cipher = Cipher.getInstance(cipherAlgorithm);
 		

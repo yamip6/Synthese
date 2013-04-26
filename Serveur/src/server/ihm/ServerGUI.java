@@ -69,11 +69,19 @@ public class ServerGUI extends JFrame {
         
     } // ServerGUI ()     
     
+    /**
+     * Accessor
+     * @return The current server
+     */
     public static Server get_server () {
 		return _server;
 		
 	} // get_server ()
 
+    /**
+     * Modifier
+     * @param server : The new server
+     */
 	public static void set_server (Server server) {
 		_server = server;
 		

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import java.security.KeyPair;
+
 import java.sql.ResultSet;
 
 import utils.Crypto;
@@ -59,6 +60,8 @@ public class Server implements Runnable {
 			startServer(port);
 			_clientThread = new Thread(this);
 			ConnectDB.connect();
+			// Loading key pair
+			_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -66,111 +69,27 @@ public class Server implements Runnable {
 	} // Server ()
 	
 	/**
-	 * Method which permit to start the server's listening
-	 * @param port : listen port
-	 * @return The connection socket of cleint/server
-	 * @throws IOException
+	 * Thread for each client of the server
 	 */
-	public void startServer (int port) throws IOException {
-		_listenSocket = new ServerSocket(port);
-		
-	} // startServer ()
-	
 	@Override
 	public void run () {
 		try {
 			while(true) {
+				// Thread for a new client
 				_clientSocket = _listenSocket.accept(); 
 				_in = _clientSocket.getInputStream();
 				_out = _clientSocket.getOutputStream();
 
 				byte[] request = receive(2);				
 				if(Arrays.equals(request, CREATION)) { // Création
-					if(identityControl()) {					
-						byte[] size = receive(4);
-						byte[] username = receive(Utils.byteArrayToInt(size));
-						size = receive(4);
-						byte[] grpName = receive(Utils.byteArrayToInt(size));
-						System.out.println("Received from client : " + new String(grpName)); // DEBUG
-						size = receive(4);
-						byte[] signature = receive(Utils.byteArrayToInt(size));
-						boolean result = Tools.verifSign(Utils.concatenateByteArray(username, grpName), _publicKey, signature);
-									
-						if(result && !_groupList.contains(new String(grpName))) {
-							send(OK);
-							
-							// Loading key pair
-							if(_keyPair == null)
-							    _keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
-							signature = Tools.sign(_keyPair.getPrivate(), OK);
-				            send(Utils.intToByteArray(signature.length, 4));
-				            send(signature);
-							// Getting the password of this user
-							ResultSet res = ConnectDB.dbSelect("SELECT password FROM members WHERE username = '" + new String(username) + "'");
-							res.next();
-							
-							// Sending the challenge to authentificate the user
-							byte[] tmpChallenge = Tools.getChallenge();
-							byte[] challenge = Tools.testAuth(new String(username), res.getString(1), tmpChallenge);
-							send(Utils.intToByteArray(challenge.length, 4));
-							send(challenge);
-							signature = Tools.sign(_keyPair.getPrivate(), challenge);
-							send(Utils.intToByteArray(signature.length, 4));
-				            send(signature);
-				            
-							size = receive(4);
-							byte[] tmpChallengeR = receive(Utils.byteArrayToInt(size));
-							if(Arrays.equals(tmpChallenge, tmpChallengeR)) {						
-								_groupList.add(new String(grpName));
-								send(OK);
-								signature = Tools.sign(_keyPair.getPrivate(), OK);
-					            send(Utils.intToByteArray(signature.length, 4));
-					            send(signature);
-					            System.out.println("New group created."); // DEBUG
-							} else
-								send(NOK);
-						} else
-							send(NOK);
-					}
+					if(identityControl())
+						groupCreation();
 				}
+				
+				// A mettre dans une boucle liée à ReceiveClient de MasterClient // TODO
 				request = receive(2);
 				if(Arrays.equals(request, AUTH)) { // Authentification
-					System.out.println("Réception du certificat."); // DEBUG
-					byte[] size = receive(4);
-					byte[] certificate = receive(Utils.byteArrayToInt(size));
-					System.out.println("Réception du chiffré."); // DEBUG
-					size = receive(4);
-					byte[] ciphered = receive(Utils.byteArrayToInt(size));
-					
-					// Déchiffrer
-					byte[] plain = Tools.decrypt(ciphered, _keyPair.getPrivate());
-					byte[] username = Arrays.copyOfRange(plain, 0, plain.length-16);
-					byte[] imprint = Arrays.copyOfRange(plain, plain.length-16, plain.length);
-					// Vérifier empreinte certificat
-					byte[] certImprint = Tools.hash(certificate);
-					if(Arrays.equals(imprint, certImprint)) {
-						System.out.println("L'intégrité du certificat est vérifiée."); // DEBUG
-						// chiffrer ma clef public avec le mot de passe de identite
-						// Getting the password of this user
-						ResultSet res = ConnectDB.dbSelect("SELECT password FROM members WHERE username = '" + new String(username) + "'");
-						res.next();
-						byte[] myPubKey = Tools.tryChallenge(new String(username), res.getString(1), certificate);
-						// Comparer avec certificate
-						if(Arrays.equals(_keyPair.getPublic().getEncoded(), myPubKey)) {
-							System.out.println("L'authentification a réussi.");
-							send(OK);
-							byte[] signature = Tools.sign(_keyPair.getPrivate(), OK);
-				            send(Utils.intToByteArray(signature.length, 4));
-				            send(signature);
-							// Si c'est bon on envoi sign(certificate)
-							signature = Tools.sign(_keyPair.getPrivate(), certificate);
-							send(Utils.intToByteArray(signature.length, 4));
-							send(signature);
-						} else {
-							System.out.println("L'utilisateur n'a pu etre authentifié.");
-							send(NOK);
-						}
-					}
+					slaveAuthentification();
 				}
 	        }
 		} catch(Exception e) {
@@ -191,59 +110,59 @@ public class Server implements Runnable {
 	 */
 	public boolean identityControl () throws Exception {
 		// Receipt hash of identity control
-		byte[] tailleHash = receive(1);
-		byte[] hash = receive(Utils.byteArrayToInt(tailleHash));
-		System.out.println("Réception du hash : " + Utils.byteArrayToHexString(hash)); // DEBUG
+		byte[] hashSize = receive(1);
+		byte[] hash = receive(Utils.byteArrayToInt(hashSize));
+		System.out.println("Receive hash : " + Utils.byteArrayToHexString(hash)); // DEBUG
 		
 		// Hash check
 		if(Tools.isPubKeyStored(hash)) {
 			// Sending OK
 			_publicKey = Crypto.loadPubKey(new File("contacts/" + Utils.byteArrayToHexString(hash) + ".key")).getEncoded();
-			System.out.println("Vérification OK (envoie OK)."); // DEBUG
+			System.out.println("Checking OK (send OK)."); // DEBUG
 			send(OK);
 			
-			System.out.println("Inversion des rôles."); //DEBUG
+			System.out.println("Role reversal."); //DEBUG
 			return changeRole();
 		} else {
 			// Sending challenge
-			System.out.println("Envoie du challenge (envoie NOK)."); // DEBUG
+			System.out.println("Sending challenge (send NOK)."); // DEBUG
 			byte[] challenge = Tools.getChallenge();
 			send(NOK);
 			send(challenge);
 			
 			// Receiving the public key and signature
-			System.out.println("Réception de la clef publique et de la signature."); // DEBUG
-			byte[] taillePubKey = receive(4);
-			_publicKey = receive(Utils.byteArrayToInt(taillePubKey));
-			byte[] tailleSign = receive(4);
-		    byte[] signature = receive(Utils.byteArrayToInt(tailleSign));
+			System.out.println("Receiving the public key and signature."); // DEBUG
+			byte[] pubKeySize = receive(4);
+			_publicKey = receive(Utils.byteArrayToInt(pubKeySize));
+			byte[] signSize = receive(4);
+		    byte[] signature = receive(Utils.byteArrayToInt(signSize));
 
 		    // Signature check
 		    byte[] data = Utils.concatenateByteArray(_publicKey, challenge);
-		    boolean verif = Tools.verifSign(data, _publicKey, signature);
-		    if(verif) {
-		    	System.out.println("La vérification a réussie."); //DEBUG
+		    boolean check = Tools.verifSign(data, _publicKey, signature);
+		    if(check) {
+		    	System.out.println("The verification successful."); //DEBUG
 		    	
 		    	// Sending hash
-		    	System.out.println("Envoie du hash."); // DEBUG
-		    	byte[] empreinte = Tools.hash(_publicKey);
-		    	send(Utils.intToByteArray(empreinte.length, 1));
-		    	send(empreinte);
+		    	System.out.println("Sending hash."); // DEBUG
+		    	byte[] imprint = Tools.hash(_publicKey);
+		    	send(Utils.intToByteArray(imprint.length, 1));
+		    	send(imprint);
 		    	
 		    	// Imprint validation
-		    	byte[] valide = receive(2);
-		    	if(Arrays.equals(valide, OK)) {
-		    		System.out.println("Le client a validé l'empreinte."); // DEBUG
+		    	byte[] valid = receive(2);
+		    	if(Arrays.equals(valid, OK)) {
+		    		System.out.println("The client has validated the footprint."); // DEBUG
 		    		// Saving the public key
-		    		System.out.println("Sauvegarde de la clé publique."); // DEBUG
-		    	    Utils.saveBuffer(_publicKey, new File("contacts/" + Utils.byteArrayToHexString(empreinte) + ".key"));
+		    		System.out.println("Saving the public key."); // DEBUG
+		    	    Utils.saveBuffer(_publicKey, new File("contacts/" + Utils.byteArrayToHexString(imprint) + ".key"));
 		    	    
-		    	    System.out.println("Inversion des rôles."); // DEBUG
+		    	    System.out.println("Role reversal."); // DEBUG
 		    	    return changeRole();
-		    	} else if(Arrays.equals(valide, NOK))
-		    		System.out.println("Le client n'a pas validé l'empreinte."); //DEBUG
+		    	} else if(Arrays.equals(valid, NOK))
+		    		System.err.println("The client does not validate the impression."); //DEBUG
 		    } else 
-		    	System.out.println("La vérification a échouée."); // DEBUG
+		    	System.err.println("Verification failed."); // DEBUG
 		}	
 		return false;
 		
@@ -257,27 +176,23 @@ public class Server implements Runnable {
 		// MD5 hash of the public key
 		byte[] hash = Tools.hashFile("keys/public.key");
 		// Sending hash
-		System.out.println("Envoie de l'empreinte de la clef publique : " + Utils.byteArrayToHexString(hash)); // DEBUG
+		System.out.println("Sending the imprint of the public key : " + Utils.byteArrayToHexString(hash)); // DEBUG
 		send(Utils.intToByteArray(hash.length, 1));
 		send(hash);
 
 		// Hash result
 		byte[] verif = receive(2);
 		if(Arrays.equals(verif, OK)) {
-			System.out.println("Votre clef est déjà enregistrée auprès du destinataire (réceprion OK)."); // DEBUG
+			System.out.println("Your key is already registered with the recipient (receiving OK).\n"); // DEBUG
 			return true;
 			// End of the exchange
 		} else if(Arrays.equals(verif, NOK)) {
 			// Receiving the challenge
 			byte[] challengeR = receive(16);
-			System.out.println("Réception du challenge (réception NOK)."); // DEBUG
-
-			// Loading your public key
-			System.out.println("Charmement de votre paire de clefs."); // DEBUG
-			_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
+			System.out.println("Receiving the challenge (receive NOK)."); // DEBUG
 
 			// Sending the public key and the signature public key/challenge
-			System.out.println("Envoie de la clef publique/signature."); // DEBUG
+			System.out.println("Sending the public key and the signature."); // DEBUG
 			byte[] pubKey = _keyPair.getPublic().getEncoded();
 			send(Utils.intToByteArray(pubKey.length, 4));
 			send(pubKey);
@@ -287,25 +202,135 @@ public class Server implements Runnable {
 			send(signature);
 
 			// Receiving the imprint
-			byte[] tailleHash = receive(1);
-			byte[] empreinte = receive(Utils.byteArrayToInt(tailleHash));
-			System.out.println("Enpreinte reçue : " + Utils.byteArrayToHexString(empreinte));
+			byte[] hashSize = receive(1);
+			byte[] imprint = receive(Utils.byteArrayToInt(hashSize));
+			System.out.println("Imprint received : " + Utils.byteArrayToHexString(imprint));
 
 			// Comparison of imprints
-			System.out.println("Mon empreinte : " + Utils.byteArrayToHexString(hash));
+			System.out.println("My imprint : " + Utils.byteArrayToHexString(hash));
 			// Footprints validation
-			if(Arrays.equals(empreinte, hash)) {
-				System.out.println("Les empreintes sont bien valides.");
+			if(Arrays.equals(imprint, hash)) {
+				System.out.println("Imprints are valid.\n");
 				send(OK);
 				return true;
 			} else {
-				System.out.println("Les empreintes reçue et réelle sont différentes.");
+				System.err.println("The received and real footprints are differents.");
 				send(NOK);
 			}
 		}
 		return false;
 		
 	} // changeRole ()
+	
+	public void groupCreation () throws Exception {
+		// Receiving username, group and signature
+		byte[] size = receive(4);
+		byte[] username = receive(Utils.byteArrayToInt(size));
+		size = receive(4);
+		byte[] grpName = receive(Utils.byteArrayToInt(size));
+		System.out.println("Received from client : " + new String(username) + " - " + new String(grpName)); // DEBUG
+		
+		// Verifying the signature
+		size = receive(4);
+		byte[] signature = receive(Utils.byteArrayToInt(size));
+		boolean result = Tools.verifSign(Utils.concatenateByteArray(username, grpName), _publicKey, signature);								
+		if(result && !_groupList.contains(new String(grpName))) {
+			System.out.println("The signature is valid (send OK)."); // DEBUG
+			send(OK);
+			signature = Tools.sign(_keyPair.getPrivate(), OK);
+            send(Utils.intToByteArray(signature.length, 4));
+            send(signature);
+			
+			// Getting the password of this user
+			ResultSet res = ConnectDB.dbSelect("SELECT password FROM members WHERE username = '" + new String(username) + "'");
+			res.next();
+			
+			// Sending the challenge to authentificate the user
+			System.out.println("Sending the challenge for authentification."); // DEBUG
+			byte[] tmpChallenge = Tools.getChallenge();
+			byte[] challenge = Tools.decryptWithPass(new String(username), res.getString(1), tmpChallenge);
+			send(Utils.intToByteArray(challenge.length, 4));
+			send(challenge);
+			signature = Tools.sign(_keyPair.getPrivate(), challenge);
+			send(Utils.intToByteArray(signature.length, 4));
+            send(signature);
+            
+            // Verifying the authentification
+			size = receive(4);
+			byte[] tmpChallengeR = receive(Utils.byteArrayToInt(size));
+			if(Arrays.equals(tmpChallenge, tmpChallengeR)) {						
+				_groupList.add(new String(grpName));
+				send(OK);
+				signature = Tools.sign(_keyPair.getPrivate(), OK);
+	            send(Utils.intToByteArray(signature.length, 4));
+	            send(signature);
+	            System.out.println("New group created.\n"); // DEBUG
+			} else {
+				System.err.println("This user didn't managed to authentificate."); // DEBUG
+				send(NOK);
+			}
+		} else {
+			System.err.println("This group already exist (or this is a wrong signature)."); // DEBUG
+			send(NOK);
+		}
+		
+	} // groupCreation ()
+	
+	public void slaveAuthentification () throws Exception {
+		System.out.println("Receiving the certificate."); // DEBUG
+		byte[] size = receive(4);
+		byte[] certificate = receive(Utils.byteArrayToInt(size));
+		System.out.println("Receiving the encrypted."); // DEBUG
+		size = receive(4);
+		byte[] ciphered = receive(Utils.byteArrayToInt(size));
+		
+		// Decrypting
+		System.out.println("Decrypting."); // DEBUG
+		byte[] plain = Tools.decrypt(ciphered, _keyPair.getPrivate());
+		byte[] username = Arrays.copyOfRange(plain, 0, plain.length-16);					
+		byte[] imprint = Arrays.copyOfRange(plain, plain.length-16, plain.length);
+		System.out.println("Authentification of : " + new String(username)); // DEBUG
+		// Verifying the imprint of the certificate
+		byte[] certImprint = Tools.hash(certificate);
+		if(Arrays.equals(imprint, certImprint)) {
+			System.out.println("The integrity of the certificate is checked."); // DEBUG
+			// Getting the password of this user
+			ResultSet res = ConnectDB.dbSelect("SELECT password FROM members WHERE username = '" + new String(username) + "'");
+			res.next();
+			// Decrypting the certificate with the password of the user who want authentificate
+			byte[] myPubKey = Tools.encyptWithPass(new String(username), res.getString(1), certificate);
+			// Compare the certificates
+			if(Arrays.equals(_keyPair.getPublic().getEncoded(), myPubKey)) {
+				System.out.println("The authentication was successful.\n"); // DEBUG
+				send(OK);
+				byte[] signature = Tools.sign(_keyPair.getPrivate(), OK);
+	            send(Utils.intToByteArray(signature.length, 4));
+	            send(signature);
+				// OK => send sign(certificate)
+				signature = Tools.sign(_keyPair.getPrivate(), certificate);
+				send(Utils.intToByteArray(signature.length, 4));
+				send(signature);
+			} else {
+				System.err.println("The user could not be authenticated."); // DEBUG
+				send(NOK);
+			}
+		} else {
+			System.err.println("The thumbprint of the certificate does not match."); // DEBUG
+			send(NOK);
+		}
+		
+	} // slaveAuthentification ()
+	
+	/**
+	 * Method which permit to start the server's listening
+	 * @param port : listen port
+	 * @return The connection socket of cleint/server
+	 * @throws IOException
+	 */
+	public void startServer (int port) throws IOException {
+		_listenSocket = new ServerSocket(port);
+		
+	} // startServer ()
 	
 	public void disconnection () throws IOException {
 		// Closing the sockets
@@ -340,8 +365,8 @@ public class Server implements Runnable {
 	} // receive ()
 
 	/**
-	 * 
-	 * @return
+	 * Accessor
+	 * @return The client's thread
 	 */
 	public Thread get_clientThread () {
 		return _clientThread;

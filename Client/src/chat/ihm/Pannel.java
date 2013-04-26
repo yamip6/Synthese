@@ -1,7 +1,6 @@
 package chat.ihm;
 
 import java.awt.BorderLayout;
-import java.awt.Container;
 import java.awt.FlowLayout;
 
 import javax.swing.JButton;
