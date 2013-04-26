@@ -21,7 +21,7 @@ import utils.Utils;
 
 import db.ConnectDB;
 
-public class Server {
+public class Server implements Runnable {
 
 	/** Listen socket of the server */
 	private ServerSocket _listenSocket;
@@ -38,6 +38,8 @@ public class Server {
     private byte[] _publicKey;
     /** Server keypair */
     private KeyPair _keyPair;
+    /** */
+    private Thread _threadClient;
 	
 	/** Constant of validation during communication*/
 	public final byte[] OK = new byte[]{0x4f, 0x11};
@@ -60,6 +62,7 @@ public class Server {
 			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
 				Tools.keyGenerator();
 			startServer(port);
+			_threadClient = new Thread(this);
 			ConnectDB.connect();
 			// Loading key pair
 			_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
@@ -69,15 +72,38 @@ public class Server {
 		
 	} // Server ()
 	
+	@Override
+	public void run () { 
+		try {
+			while(true) {
+			// Thread for a new client
+			_clientSocket = _listenSocket.accept(); 
+			new Services(_clientSocket);}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	} // run ()
+	
 	/**
 	 * Method which offers services for the differents clients
 	 */
-	public void services () {
+	private class Services implements Runnable {
+        Socket socket;
+		public Services (Socket s) {
+			socket = s;
+			try {
+				_in = socket.getInputStream();
+				_out = socket.getOutputStream();
+				new Thread(this).start();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		@Override
+		public void run() {
 		try {
-			// Thread for a new client
-			_clientSocket = _listenSocket.accept(); 
-			_in = _clientSocket.getInputStream();
-			_out = _clientSocket.getOutputStream();
 			
 			while(true) {
 				byte[] request = receive(2);				
@@ -98,7 +124,7 @@ public class Server {
 				e.printStackTrace();
 			}
 		}
-		
+		}
 	} // run ()
 	
 	/**
@@ -360,5 +386,14 @@ public class Server {
 		return data;
 		
 	} // receive ()
+
+	/**
+	 * Accessor
+	 * @return the current client thread
+	 */
+	public Thread get_threadClient () {
+		return _threadClient;
+		
+	} // get_threadClient ()
 
 } // Server

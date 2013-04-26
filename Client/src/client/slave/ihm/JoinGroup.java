@@ -61,7 +61,7 @@ public class JoinGroup extends JPanel {
         		
         	} // actionPerformed ()
         });
-        btnLaunchServer.setBounds(160, 208, 114, 39);
+        btnLaunchServer.setBounds(177, 205, 125, 56);
         add(btnLaunchServer);           
         
     } // JoinGroup ()    

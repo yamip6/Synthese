@@ -32,38 +32,38 @@ public class Config extends JPanel {
         setLayout(null);               
         
         JLabel lblUserName = new JLabel("User name:");
-        lblUserName.setBounds(103, 43, 114, 14);
+        lblUserName.setBounds(109, 42, 114, 14);
         add(lblUserName);
         
         JLabel lblGroupName = new JLabel("Group name:");
-        lblGroupName.setBounds(103, 83, 114, 14);
+        lblGroupName.setBounds(109, 82, 114, 14);
         add(lblGroupName);
         
         JLabel lblUriServer = new JLabel("IP server:");
-        lblUriServer.setBounds(103, 122, 114, 14);
+        lblUriServer.setBounds(109, 121, 114, 14);
         add(lblUriServer);
         
         JLabel lblPort = new JLabel("Port:");
-        lblPort.setBounds(103, 159, 114, 14);
+        lblPort.setBounds(109, 158, 114, 14);
         add(lblPort);
         
         _username = new JTextField();
-        _username.setBounds(214, 40, 106, 20);
+        _username.setBounds(220, 39, 106, 20);
         add(_username);
         _username.setColumns(10);
         
         _groupName = new JTextField();
-        _groupName.setBounds(214, 80, 106, 20);
+        _groupName.setBounds(220, 79, 106, 20);
         add(_groupName);
         _groupName.setColumns(10);
         
         _ipServer = new JTextField();
-        _ipServer.setBounds(214, 119, 106, 20);
+        _ipServer.setBounds(220, 118, 106, 20);
         add(_ipServer);
         _ipServer.setColumns(10);
         
         _port = new JTextField();
-        _port.setBounds(214, 156, 106, 20);
+        _port.setBounds(220, 155, 106, 20);
         add(_port);
         _port.setColumns(10);
         
@@ -97,7 +97,7 @@ public class Config extends JPanel {
         		
         	} // actionPerformed ()
         });
-        btnLaunchServer.setBounds(160, 208, 114, 46);
+        btnLaunchServer.setBounds(166, 207, 114, 46);
         add(btnLaunchServer);   
         
     } // Config ()
