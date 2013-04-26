@@ -41,7 +41,7 @@ public class Config extends JPanel {
         	public void actionPerformed (ActionEvent e) {
         		try {
         			ServerGUI.set_server(new Server(Integer.parseInt(_port.getText())));
-        			ServerGUI.get_server().get_clientThread().start();
+        			ServerGUI.get_server().services();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}

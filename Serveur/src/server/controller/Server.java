@@ -21,7 +21,7 @@ import utils.Utils;
 
 import db.ConnectDB;
 
-public class Server implements Runnable {
+public class Server {
 
 	/** Listen socket of the server */
 	private ServerSocket _listenSocket;
@@ -38,8 +38,6 @@ public class Server implements Runnable {
     private byte[] _publicKey;
     /** Server keypair */
     private KeyPair _keyPair;
-    /** Client's thread */
-    private Thread _clientThread;
 	
 	/** Constant of validation during communication*/
 	public final byte[] OK = new byte[]{0x4f, 0x11};
@@ -58,7 +56,6 @@ public class Server implements Runnable {
 			if(!(new File("keys/private.key").exists() && new File("keys/private.salt.key").exists() && new File("keys/public.key").exists()))
 				Tools.keyGenerator();
 			startServer(port);
-			_clientThread = new Thread(this);
 			ConnectDB.connect();
 			// Loading key pair
 			_keyPair = Crypto.loadKeyPair(new File("keys/private.key"), new File("keys/private.salt.key"), new File("keys/public.key"));
@@ -68,27 +65,20 @@ public class Server implements Runnable {
 		
 	} // Server ()
 	
-	/**
-	 * Thread for each client of the server
-	 */
-	@Override
-	public void run () {
+	public void services () {
 		try {
+			// Thread for a new client
+			_clientSocket = _listenSocket.accept(); 
+			_in = _clientSocket.getInputStream();
+			_out = _clientSocket.getOutputStream();
+			
 			while(true) {
-				// Thread for a new client
-				_clientSocket = _listenSocket.accept(); 
-				_in = _clientSocket.getInputStream();
-				_out = _clientSocket.getOutputStream();
-
 				byte[] request = receive(2);				
 				if(Arrays.equals(request, CREATION)) { // Création
 					if(identityControl())
 						groupCreation();
 				}
-				
-				// A mettre dans une boucle liée à ReceiveClient de MasterClient // TODO
-				request = receive(2);
-				if(Arrays.equals(request, AUTH)) { // Authentification
+				else if(Arrays.equals(request, AUTH)) { // Authentification
 					slaveAuthentification();
 				}
 	        }
@@ -363,14 +353,5 @@ public class Server implements Runnable {
 		return data;
 		
 	} // receive ()
-
-	/**
-	 * Accessor
-	 * @return The client's thread
-	 */
-	public Thread get_clientThread () {
-		return _clientThread;
-		
-	} // get_clientThread ()
 
 } // Server
