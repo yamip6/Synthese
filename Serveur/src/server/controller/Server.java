@@ -288,6 +288,11 @@ public class Server implements Runnable {
 				signature = Tools.sign(_keyPair.getPrivate(), OK);
 	            send(Utils.intToByteArray(signature.length, 4));
 	            send(signature);
+	            // Creating the client's certificate
+	            System.out.println("Sending the certificate of the creator."); // DEBUG
+	            byte[] certificate = Tools.sign(_keyPair.getPrivate(), grpName);
+	            send(Utils.intToByteArray(certificate.length, 4));
+	            send(certificate);
 	            System.out.println("New group created.\n"); // DEBUG
 			} else {
 				System.err.println("This user didn't managed to authentificate."); // DEBUG

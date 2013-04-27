@@ -38,9 +38,6 @@ public class MasterClient extends Client {
     private OutputStream _tmpOut;
     /** Temporary socket list of the group */
     private ArrayList<Socket> _socketList;
-    
-    /** */
-    private volatile boolean _loop = true;
 
 	/**
 	 * Constructor
@@ -238,12 +235,14 @@ public class MasterClient extends Client {
 		    // Authentication result
 		    response = receive(2);
 			if(Arrays.equals(response, OK)) {
-		        System.out.println("The Authentication was successful.\n"); // DEBUG
 		        size = receive(4);
 		        signature = receive(Utils.byteArrayToInt(size));
-		        if(Tools.verifSign(OK, _publicKey, signature))
+		        if(Tools.verifSign(OK, _publicKey, signature)) {
+		        	System.out.println("The Authentication was successful.\n"); // DEBUG
+		        	size = receive(4);
+		        	_certificate = receive(Utils.byteArrayToInt(size));
 		            return true;
-		        else
+		        } else
 		        	System.err.println("Signature error."); // DEBUG
 			} else if(Arrays.equals(response, NOK)) 
 				System.err.println("Authentication failed."); // DEBUG
@@ -260,8 +259,10 @@ public class MasterClient extends Client {
 	 * @throws InterruptedException 
 	 */
 	public void invitation (String nameGroup) throws IOException, InterruptedException {
-		byte[] invitation = nameGroup.getBytes(); // The nameGroup is considered as an invitation we can use a key word as invitation !
-
+		// The invitation need a certificate
+		byte[] content = Utils.concatenateByteArray(nameGroup.getBytes(), _certificate);
+        byte[] invitation = Utils.concatenateByteArray(Utils.intToByteArray(content.length, 4), content);
+		
 		DatagramPacket toSend = new DatagramPacket(invitation, invitation.length, _ipGroup, 9999);
 	    _broadcastSocket.send(toSend);
 		
@@ -278,6 +279,8 @@ public class MasterClient extends Client {
 			// Receipt of requests (certificate|encrypted)
 			_tmpSocket = _tmpListenSocket.accept();
 			_tmpIn = _tmpSocket.getInputStream();
+			_tmpOut = _tmpSocket.getOutputStream();
+			byte[] cerificateSigned = null;
 			System.out.println("Receiving the certificate."); // DEBUG
 			byte[] data = new byte[4];
 			_tmpIn.read(data);
@@ -308,7 +311,7 @@ public class MasterClient extends Client {
 				}
 				System.out.println("The authentication was successful : " + _tmpSocket.getInetAddress()); // DEBUG
 				size = receive(4);
-				byte[] cerificateSigned = receive(Utils.byteArrayToInt(size));
+				cerificateSigned = receive(Utils.byteArrayToInt(size));
 				boolean ok = Tools.verifSign(certificate, _publicKey, cerificateSigned);
 				if(ok && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
 					_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of an enjoyed client is added in the ArrayList to create the ring
@@ -319,6 +322,9 @@ public class MasterClient extends Client {
 					System.err.println("This client has already been added (or signature error)."); // DEBUG
 			} else if(Arrays.equals(NOK, result))
 				System.err.println("The user could not be authenticated (or The thumbprint of the certificate does not match)."); // DEBUG
+			
+			_tmpOut.write(Utils.intToByteArray(cerificateSigned.length, 4));
+			_tmpOut.write(cerificateSigned.length);
 		}
 		
 	} // receiveClient ()

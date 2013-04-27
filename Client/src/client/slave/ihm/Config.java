@@ -1,5 +1,6 @@
 package client.slave.ihm;
 
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JButton;
@@ -10,6 +11,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 
 import client.slave.SlaveClient;
 
@@ -47,7 +52,7 @@ public class Config extends JPanel {
         				public void run () {
         					try {
         						SlaveClientGUI.get_slave().receiveInvitation();
-        					} catch (IOException e) {
+        					} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException | SignatureException e) {
         						e.printStackTrace();
         					}
         					

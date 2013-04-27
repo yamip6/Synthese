@@ -47,6 +47,8 @@ public class Client {
 
 	/** User's key pair */
 	protected KeyPair _keyPair = null;
+	/** Certificate of a client */
+	protected byte[] _certificate;
 
 	/** Constant of validation during communication*/
 	public final byte[] OK = new byte[]{0x4f, 0x11};
@@ -57,6 +59,9 @@ public class Client {
 	/** Constant of other client authentification */
 	public final byte[] AUTH = new byte[]{0x0d, 0x11};
 	
+	/** */
+    protected volatile boolean _loop = true;
+    
 	/**
 	 * Constructor
 	 * @param username : User name of the client
