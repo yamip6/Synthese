@@ -52,6 +52,7 @@ public class JoinGroup extends JPanel {
         			String ip = (String) _table.getValueAt(rowSelectionned, 0);
         			String grp = (String) _table.getValueAt(rowSelectionned, 1);
    
+        			SlaveClientGUI.get_slave().set_loop(false);
         			SlaveClientGUI.get_slave().requestJoinGroup(grp, ip); // devrait rendre un booleen avec raison echec !!!
         			
         			SlaveClientGUI.get_slave().linkNeighboor();

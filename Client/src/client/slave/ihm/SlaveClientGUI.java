@@ -94,7 +94,16 @@ public class SlaveClientGUI extends JFrame {
 		
 	} // set_slave ()
     
-    /**
+	/**
+	 * 
+	 * @return
+	 */
+    public static JoinGroup get_jgroup () {
+		return _jgroup;
+		
+	} // get_jgroup ()
+
+	/**
      * Method which permits to launch the client slave application
      * @param args
      */

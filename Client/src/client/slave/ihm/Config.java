@@ -44,10 +44,9 @@ public class Config extends JPanel {
         			SlaveClientGUI.set_slave(new SlaveClient(_username.getText()));
         		    Thread t = new Thread(new Runnable() {
         				@Override
-        				public void run () { // A mettre dans une boucle si plusieurs clientMaster à étudier !!!
+        				public void run () {
         					try {
         						SlaveClientGUI.get_slave().receiveInvitation();
-        						SlaveClientGUI._jgroup.refresh(); // Updating the JTable
         					} catch (IOException e) {
         						e.printStackTrace();
         					}

@@ -15,6 +15,7 @@ import utils.Tools;
 import utils.Utils;
 
 import client.Client;
+import client.slave.ihm.SlaveClientGUI;
 
 public class SlaveClient extends Client {
 
@@ -22,6 +23,9 @@ public class SlaveClient extends Client {
 	private HashMap<String, String> _listGroups;
 	/** Disposable certificate of a client */
 	private byte[] _certificate;
+	
+	/** */
+    private volatile boolean _loop = true;
 	
 	/**
 	 * Constructor
@@ -45,16 +49,20 @@ public class SlaveClient extends Client {
 	 * @throws IOException
 	 */
 	public void receiveInvitation () throws IOException {
-		// Receiving a broadcast invitation
-		byte[] receiveDtg = new byte[1024];
-		DatagramPacket invitation;
-		invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
-		_broadcastSocket.receive(invitation);
-		byte[] grpInvitation = invitation.getData();
-		System.out.println("Receiving invitation : " + invitation.getAddress()); // DEBUG
-		// Verifying if this group has already been created
-		if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation))))
-			_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
+		while(_loop) {
+			// Receiving a broadcast invitation
+			byte[] receiveDtg = new byte[1024];
+			DatagramPacket invitation;
+			invitation = new DatagramPacket(receiveDtg, receiveDtg.length);
+			_broadcastSocket.receive(invitation);
+			byte[] grpInvitation = invitation.getData();
+			System.out.println("Receiving invitation : " + invitation.getAddress()); // DEBUG
+			// Verifying if this group has already been created
+			if (!(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation)))) {
+				_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
+				SlaveClientGUI.get_jgroup().refresh();
+			}
+		}
 		
 	} // receiveInvitation ()
 	
@@ -115,5 +123,14 @@ public class SlaveClient extends Client {
 		return _listGroups;
 		
 	} // get_listGroups ()
+
+	/**
+	 * 
+	 * @param loop
+	 */
+	public void set_loop (boolean loop) {
+		_loop = loop;
+		
+	} // set_loop ()
 
 } // SlaveClient

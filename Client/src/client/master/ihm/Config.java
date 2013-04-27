@@ -63,6 +63,7 @@ public class Config extends JPanel {
         _ipServer.setColumns(10);
         
         _port = new JTextField();
+        _port.setText("50000");
         _port.setBounds(220, 155, 106, 20);
         add(_port);
         _port.setColumns(10);
