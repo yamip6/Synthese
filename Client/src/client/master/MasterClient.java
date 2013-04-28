@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -316,7 +317,7 @@ public class MasterClient extends Client {
 				if(ok && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
 					_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of an enjoyed client is added in the ArrayList to create the ring
 					_socketList.add(_tmpSocket); // Record the client
-					MasterClientGUI.get_chat().refresh();
+					MasterClientGUI.get_start().refresh(Utils.byteArrayToHexString(cerificateSigned));
 					System.out.println("A new client is added."); // DEBUG
 				} else
 					System.err.println("This client has already been added (or signature error)."); // DEBUG
@@ -333,14 +334,19 @@ public class MasterClient extends Client {
 	 * Distribution of the adresses ips to the clients slave from the client master. Moreover,
 	 * this function creates the first link between the client master and the first client slave for the ring.
 	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
 	 */
-	public void discussionGroupCreation () throws IOException {
+	public void discussionGroupCreation () throws IOException, NoSuchAlgorithmException {
 		System.out.println("Création du groupe de discussion");
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
 		
 		for(Socket tmpSocket : _socketList) {
 			byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
 			_tmpOut = tmpSocket.getOutputStream();
+			byte[] hash = Tools.hash(toSend); // Hash to verifiy the integrity of the list
+			_tmpOut.write(Utils.intToByteArray(hash.length, 4));
+			_tmpOut.write(hash);
+			_tmpOut.write(Utils.intToByteArray(toSend.length, 4));
 			_tmpOut.write(toSend);
 			_tmpOut.flush();
 		}

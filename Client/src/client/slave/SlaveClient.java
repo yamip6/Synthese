@@ -76,7 +76,7 @@ public class SlaveClient extends Client {
 			// Verifying if this group has already been created
 			if (signOK && !(_listGroups.containsKey(invitation.getAddress()) && _listGroups.containsValue(new String(grpInvitation)))) {
 				_listGroups.put(invitation.getAddress().getHostAddress(), new String(grpInvitation));
-				SlaveClientGUI.get_jgroup().refresh();
+				SlaveClientGUI.get_jgroup().refresh(Utils.byteArrayToHexString(certInvitation));
 				System.out.println("New invitation request.");
 			} else
 				System.err.println("This group has already been created (or certificate error).");
@@ -121,8 +121,18 @@ public class SlaveClient extends Client {
 		System.out.println("Linking neighboor."); // DEBUG
 		// Receiving the ip list of the ring (for this group)
 		_inServer = _clientSocket.getInputStream();
-		byte[] data = receive(1024);
-		ArrayList<String> listIps = Utils.byteArrayToList(data);
+		byte[] sizeHash = receive(4);
+		byte[] hash = receive(Utils.byteArrayToInt(sizeHash));
+		byte[] sizeList = receive(4);
+		byte[] list = receive(Utils.byteArrayToInt(sizeList));
+		
+		// Verifying the hash
+		if(!Arrays.equals(Tools.hash(list), hash)) {
+			System.err.println("The integrity of the list has not been verified."); // DEBUG
+			return;
+		}
+		
+		ArrayList<String> listIps = Utils.byteArrayToList(list);
 		
 		// The client searchs its ip to determinate the ip following its own ip :
 		int pos;

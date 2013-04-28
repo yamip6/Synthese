@@ -91,7 +91,7 @@ public class Config extends JPanel {
 					t.start();
 					
 					MasterClientGUI._config.setVisible(false);
-					MasterClientGUI._chat.setVisible(true);
+					MasterClientGUI._start.setVisible(true);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				} 

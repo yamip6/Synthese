@@ -18,6 +18,7 @@ import server.controller.Server;
 
 @SuppressWarnings("serial")
 public class ServerGUI extends JFrame {
+	
     /** Graphic panel to configure the server (port) */
     protected static Config _config;
     /** Server */

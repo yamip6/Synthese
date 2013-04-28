@@ -35,11 +35,11 @@ public class JoinGroup extends JPanel {
         
         _listGroups = new HashMap<String,String>();
         
-        _modele = new TableModel(_listGroups);
+        _modele = new TableModel(_listGroups, "");
         _table = new JTable(_modele);
         _table.setBounds(85, 42, 316, 144);
         scrollPane = new JScrollPane(_table);
-        scrollPane.setBounds(85, 42, 316, 144);
+        scrollPane.setBounds(29, 42, 411, 144);
         add(scrollPane, BorderLayout.CENTER);      
         
         JButton btnLaunchServer = new JButton("Join group");
@@ -56,13 +56,16 @@ public class JoinGroup extends JPanel {
         			SlaveClientGUI.get_slave().requestJoinGroup(grp, ip); // devrait rendre un booleen avec raison echec !!!
         			
         			SlaveClientGUI.get_slave().linkNeighboor();
+        			
+        			SlaveClientGUI._jgroup.setVisible(false);
+        			SlaveClientGUI._chat.setVisible(true);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
         		
         	} // actionPerformed ()
         });
-        btnLaunchServer.setBounds(177, 205, 125, 56);
+        btnLaunchServer.setBounds(170, 205, 125, 56);
         add(btnLaunchServer);           
         
     } // JoinGroup ()    
@@ -70,8 +73,8 @@ public class JoinGroup extends JPanel {
     /**
      * Call it to update JTable
      */
-    public void refresh () {
-		_modele = new TableModel(SlaveClientGUI.get_slave().get_listGroups());
+    public void refresh (String certificate) {
+		_modele = new TableModel(SlaveClientGUI.get_slave().get_listGroups(), certificate);
         _table.setModel(_modele);
         _modele.fireTableDataChanged();
         

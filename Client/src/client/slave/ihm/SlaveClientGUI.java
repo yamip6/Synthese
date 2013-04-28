@@ -9,6 +9,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import client.master.ihm.Chat;
 import client.slave.SlaveClient;
 
 import java.awt.event.ActionListener;
@@ -18,10 +19,13 @@ import java.awt.event.WindowEvent;
 
 @SuppressWarnings("serial")
 public class SlaveClientGUI extends JFrame {
+	
     /** Graphic pannel of client configuration */
     protected static Config _config;
     /** Graphic pannel to join a group */
     protected static JoinGroup _jgroup;
+    /** Graphic panel of discussion with other clients */
+    protected static Chat _chat;
     /** Slave client */
 	private static SlaveClient _slave;
 
@@ -47,7 +51,12 @@ public class SlaveClientGUI extends JFrame {
         _jgroup.setVisible(false);
         add(_jgroup);
         
-     // Shared graphical components (of the window)
+        _chat = new Chat();
+        _chat.setBounds(0, 0, 500, 350);
+        _chat.setVisible(false);
+        add(_chat);
+        
+        // Shared graphical components (of the window)
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         

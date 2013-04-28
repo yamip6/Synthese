@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 @SuppressWarnings("serial")
@@ -28,11 +29,11 @@ public class ChatStart extends JPanel {
         setBackground(Color.WHITE);
         setLayout(null);
         
-        _modele = new TableModelMaster(new ArrayList<String>());
+        _modele = new TableModelMaster(new ArrayList<String>(), "");
         _table = new JTable(_modele);      
         _table.setBounds(85, 42, 316, 144);
         _scrollPane = new JScrollPane(_table);
-        _scrollPane.setBounds(77, 11, 316, 144);
+        _scrollPane.setBounds(43, 11, 374, 144);
         add(_scrollPane, BorderLayout.CENTER);      
         
         JButton btnLaunchServer = new JButton("Start chat");
@@ -42,16 +43,19 @@ public class ChatStart extends JPanel {
         		Thread t = new Thread(new Runnable() {
         		    @Override
         		    public void run () {
-        				MasterClientGUI.get_master().set_loop(false);
         				try {
+        					MasterClientGUI.get_master().set_loop(false);
 							MasterClientGUI.get_master().discussionGroupCreation();
-						} catch (IOException e) {
+						} catch (IOException | NoSuchAlgorithmException e) {
 							e.printStackTrace();
 						}
         				
         	        } // run ()
         	    });
         		t.start();
+        		
+        		MasterClientGUI._start.setVisible(false);
+				MasterClientGUI._chat.setVisible(true);
         		
         	} // actionPerformed ()
         });
@@ -63,8 +67,8 @@ public class ChatStart extends JPanel {
     /**
      * Call it to update the JTable
      */
-    public void refresh () {
-		_modele = new TableModelMaster(MasterClientGUI.get_master().get_acceptedClients());
+    public void refresh (String certificate) {
+		_modele = new TableModelMaster(MasterClientGUI.get_master().get_acceptedClients(), certificate);
         _table.setModel(_modele);
         _modele.fireTableDataChanged();
         

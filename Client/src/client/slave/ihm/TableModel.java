@@ -13,15 +13,17 @@ public class TableModel extends AbstractTableModel {
 	private ArrayList<String> _listIp;
 	/** */
 	private ArrayList<String> _listGr;
+	/** */
+	private String _certificate;
 	
 	/** */
-	private final String[] headers = {"Creator(s)' ip(s)", "Group(s) name(s)"};
+	private final String[] headers = {"Creator's ip", "Pseudo", "Group name", "Certificate"};
 	
 	/**
 	 * Constructor
 	 * @param liste
 	 */
-    public TableModel (HashMap<String, String> liste) {
+    public TableModel (HashMap<String, String> liste, String certificate) {
     	_listIp = new ArrayList<String>();
 		_listGr = new ArrayList<String>();
 		for(Entry<String, String> entry : liste.entrySet()) {
@@ -29,6 +31,7 @@ public class TableModel extends AbstractTableModel {
 		    String valeur = entry.getValue();
 		    _listIp.add(cle); _listGr.add(valeur);
 		}
+		_certificate = certificate;
 		
     } // TableModel ()
  
@@ -55,8 +58,10 @@ public class TableModel extends AbstractTableModel {
 		switch(col){
 			case 0:
 				return _listIp.get(row);
-			case 1:
+			case 2:
 				return _listGr.get(row);
+			case 3:
+				return _certificate;
 			default:
 				return null;
 		}

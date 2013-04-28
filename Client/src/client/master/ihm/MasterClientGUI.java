@@ -18,10 +18,13 @@ import client.master.MasterClient;
 
 @SuppressWarnings("serial")
 public class MasterClientGUI extends JFrame {
+	
     /** Graphic panel of configuration clientBis/server */
     protected static Config _config;
     /** Graphic panel of starting discussion with other clients */
-    protected static ChatStart _chat;
+    protected static ChatStart _start;
+    /** Graphic panel of discussion with other clients */
+    protected static Chat _chat;
     
     /** The master client */
 	private static MasterClient _master;
@@ -43,7 +46,12 @@ public class MasterClientGUI extends JFrame {
         _config.setVisible(true);
         add(_config);
         
-        _chat = new ChatStart();
+        _start = new ChatStart();
+        _start.setBounds(0, 0, 500, 350);
+        _start.setVisible(false);
+        add(_start);
+        
+        _chat = new Chat();
         _chat.setBounds(0, 0, 500, 350);
         _chat.setVisible(false);
         add(_chat);
@@ -99,10 +107,10 @@ public class MasterClientGUI extends JFrame {
 	 * 
 	 * @return
 	 */
-    public static ChatStart get_chat () {
-		return _chat;
+    public static ChatStart get_start () {
+		return _start;
 		
-	} // get_chat ()
+	} // get_start ()
 
 	/**
      * Method which permits to launch the client bis application
