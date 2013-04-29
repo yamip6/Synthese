@@ -49,6 +49,7 @@ public class Client {
 	protected KeyPair _keyPair = null;
 	/** Certificate of a client */
 	protected byte[] _certificate;
+	protected int _nbAcceptedClients;
 
 	/** Constant of validation during communication*/
 	public final byte[] OK = new byte[]{0x4f, 0x11};
@@ -166,6 +167,31 @@ public class Client {
 	public byte[] receive(int size) throws IOException, ClassNotFoundException {
 		byte[] data = new byte[size];
 		_inServer.read(data); // Reading the inputstream
+		return data;
+		
+	} // receive ()
+	
+	/**
+	 * Method which permits to send byte array
+	 * @param message : Byte array to send
+	 * @throws IOException
+	 */
+	public void sendChat (byte[] message) throws IOException {
+		_outClient.write(message);
+		_outClient.flush();
+		
+	} // send ()
+
+	/**
+	 * Méthod which permits to receive byte array
+	 * @param size : Size of byte array we want to receive
+	 * @return The byte array
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	public byte[] receiveChat (int size) throws IOException, ClassNotFoundException {
+		byte[] data = new byte[size];
+		_inClient.read(data); // Reading the input stream
 		return data;
 		
 	} // receive ()

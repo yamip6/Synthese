@@ -9,7 +9,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import client.master.ihm.Chat;
 import client.slave.SlaveClient;
 
 import java.awt.event.ActionListener;
@@ -111,6 +110,10 @@ public class SlaveClientGUI extends JFrame {
 		return _jgroup;
 		
 	} // get_jgroup ()
+    
+    public static Chat get_chat() {
+		return _chat;
+	}
 
 	/**
      * Method which permits to launch the client slave application

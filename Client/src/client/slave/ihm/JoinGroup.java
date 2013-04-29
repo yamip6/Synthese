@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 @SuppressWarnings("serial")
@@ -59,6 +60,18 @@ public class JoinGroup extends JPanel {
         			
         			SlaveClientGUI._jgroup.setVisible(false);
         			SlaveClientGUI._chat.setVisible(true);
+        			Thread t = new Thread(new Runnable() {
+        			    @Override
+        			    public void run () {
+        					try {
+        						SlaveClientGUI.get_slave().transmitMessage();
+        					} catch (IOException | ClassNotFoundException e) {
+        						e.printStackTrace();
+        					}
+        					
+        		        } // run ()
+        		    });
+        			t.start();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}

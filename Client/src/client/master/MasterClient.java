@@ -339,6 +339,7 @@ public class MasterClient extends Client {
 	public void discussionGroupCreation () throws IOException, NoSuchAlgorithmException {
 		System.out.println("Création du groupe de discussion");
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
+		_nbAcceptedClients = _acceptedClients.size();
 		
 		for(Socket tmpSocket : _socketList) {
 			byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
@@ -349,17 +350,34 @@ public class MasterClient extends Client {
 			_tmpOut.write(Utils.intToByteArray(toSend.length, 4));
 			_tmpOut.write(toSend);
 			_tmpOut.flush();
+			tmpSocket.close();
 		}
 
 		String ipNeighboor = _acceptedClients.get(0);
-		System.out.println(ipNeighboor);
+		System.out.println("Linked to : " + ipNeighboor); // DEBUG
 		startServerMode(_port);
 		connectionNeighboor(ipNeighboor, _port);
 		
-		_tmpSocket.close();
-		_tmpListenSocket.close();
-		
 	} // discussionGroupCreation ()
+	
+	public void transmitMessage () throws ClassNotFoundException, IOException {
+		while(true) {
+			byte[] size = receiveChat(4);
+			System.out.println("dfhf"); // DEBUG
+			byte[] message = receiveChat(Utils.byteArrayToInt(size));
+			byte[] messageTmp = Arrays.copyOfRange(message, 0, message.length-2);
+			
+			int cpt = Utils.byteArrayToInt(Arrays.copyOfRange(message, message.length-2, message.length));
+			System.out.println("Counter : " + cpt); // DEBUG
+			if(cpt < _nbAcceptedClients-1) {
+				MasterClientGUI.get_chat().get_fieldChat().setText(MasterClientGUI.get_chat().get_fieldChat().getText() + "\n" + new String(messageTmp));
+				cpt += 1;
+				message = Utils.concatenateByteArray(messageTmp, Utils.intToByteArray(cpt, 2));
+				sendChat(size);
+				sendChat(message);
+			}
+		}
+	} // transmitMessage ()
 
 	/**
 	 * 

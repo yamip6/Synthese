@@ -46,7 +46,8 @@ public class ChatStart extends JPanel {
         				try {
         					MasterClientGUI.get_master().set_loop(false);
 							MasterClientGUI.get_master().discussionGroupCreation();
-						} catch (IOException | NoSuchAlgorithmException e) {
+							MasterClientGUI.get_master().transmitMessage();
+						} catch (IOException | NoSuchAlgorithmException | ClassNotFoundException e) {
 							e.printStackTrace();
 						}
         				
@@ -56,7 +57,7 @@ public class ChatStart extends JPanel {
         		
         		MasterClientGUI._start.setVisible(false);
 				MasterClientGUI._chat.setVisible(true);
-        		
+				
         	} // actionPerformed ()
         });
         btnLaunchServer.setBounds(165, 183, 118, 59);

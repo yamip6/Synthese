@@ -125,6 +125,7 @@ public class SlaveClient extends Client {
 		byte[] hash = receive(Utils.byteArrayToInt(sizeHash));
 		byte[] sizeList = receive(4);
 		byte[] list = receive(Utils.byteArrayToInt(sizeList));
+		closeConnectionServer();
 		
 		// Verifying the hash
 		if(!Arrays.equals(Tools.hash(list), hash)) {
@@ -133,6 +134,7 @@ public class SlaveClient extends Client {
 		}
 		
 		ArrayList<String> listIps = Utils.byteArrayToList(list);
+		_nbAcceptedClients = listIps.size();
 		
 		// The client searchs its ip to determinate the ip following its own ip :
 		int pos;
@@ -147,6 +149,26 @@ public class SlaveClient extends Client {
 		closeConnectionServer();
 		
 	} // linkNeighboor ()
+	
+	public void transmitMessage () throws ClassNotFoundException, IOException {
+		while(true) {
+			byte[] size = receiveChat(4);
+			System.out.println("dfhf"); // DEBUG
+			byte[] message = receiveChat(Utils.byteArrayToInt(size));
+			byte[] messageTmp = Arrays.copyOfRange(message, 0, message.length-2);
+			
+			int cpt = Utils.byteArrayToInt(Arrays.copyOfRange(message, message.length-2, message.length));
+			System.out.println("Counter : " + cpt); // DEBUG
+			if(cpt < _nbAcceptedClients-1) {
+				SlaveClientGUI.get_chat().get_fieldChat().setText(SlaveClientGUI.get_chat().get_fieldChat().getText() + "\n" + new String(messageTmp));
+				cpt += 1;
+				message = Utils.concatenateByteArray(messageTmp, Utils.intToByteArray(cpt, 2));
+				sendChat(size);
+				sendChat(message);
+			}
+		}
+		
+	} // transmitMessage ()
 	
 	/**
 	 * Accessor
