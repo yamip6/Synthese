@@ -11,9 +11,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.security.Key;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import javax.crypto.KeyAgreement;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import utils.Crypto;
 import utils.Tools;
@@ -360,10 +371,49 @@ public class MasterClient extends Client {
 		
 	} // discussionGroupCreation ()
 	
+	/**
+	 * 
+	 * @throws Exception
+	 */
+	public void doDiffieHellman () throws Exception {
+		System.out.println("Beginning Diffie Hellman."); // DEBUG
+	    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DH");
+
+	    keyGen.initialize(PARAMETER_SPEC);
+
+	    KeyAgreement aKeyAgree = KeyAgreement.getInstance("DH");
+	    KeyPair aPair = keyGen.generateKeyPair();
+
+	    aKeyAgree.init(aPair.getPrivate());
+
+	    Key key = null;
+	    for(int i = 0; i < _acceptedClients.size()-1; ++i) {
+		    // Receiving the publicKey of b
+		    System.out.println("Receiving a public key (a part of the secret key)."); // DEBUG
+		    byte[] size = receiveChat(4);
+			byte[] pubB = receiveChat(Utils.byteArrayToInt(size));
+			KeyFactory factory = KeyFactory.getInstance("DH");
+			PublicKey bPubKey = factory.generatePublic(new X509EncodedKeySpec(pubB));
+		    
+			if(i == 0) {
+				sendChat(Utils.intToByteArray(aPair.getPublic().getEncoded().length, 4));
+				sendChat(aPair.getPublic().getEncoded());
+			} else if (i > 0) {
+		        sendChat(Utils.intToByteArray(key.getEncoded().length, 4));
+			    sendChat(key.getEncoded());
+			}
+			key = aKeyAgree.doPhase(bPubKey, true);
+	    }
+	    
+	    byte[] sharedSecret = aKeyAgree.generateSecret();
+	    SecretKey sk = new SecretKeySpec(sharedSecret, "AES");
+	    System.out.println("Secret: " + Utils.byteArrayToHexString(sharedSecret)); // DEBUG
+	    
+	} // doDiffieHellman ()
+	
 	public void transmitMessage () throws ClassNotFoundException, IOException {
 		while(true) {
 			byte[] size = receiveChat(4);
-			System.out.println("dfhf"); // DEBUG
 			byte[] message = receiveChat(Utils.byteArrayToInt(size));
 			byte[] messageTmp = Arrays.copyOfRange(message, 0, message.length-2);
 			

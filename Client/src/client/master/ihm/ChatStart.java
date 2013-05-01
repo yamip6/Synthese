@@ -9,8 +9,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 @SuppressWarnings("serial")
@@ -46,8 +44,9 @@ public class ChatStart extends JPanel {
         				try {
         					MasterClientGUI.get_master().set_loop(false);
 							MasterClientGUI.get_master().discussionGroupCreation();
+							MasterClientGUI.get_master().doDiffieHellman();
 							MasterClientGUI.get_master().transmitMessage();
-						} catch (IOException | NoSuchAlgorithmException | ClassNotFoundException e) {
+						} catch (Exception e) {
 							e.printStackTrace();
 						}
         				
