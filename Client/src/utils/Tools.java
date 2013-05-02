@@ -229,7 +229,7 @@ public class Tools {
 	 * @param publicKey : Clef publique du destinataire
 	 * @return Le tableau d'octets correspondant au chiffré
 	 */
-	public static byte[] encrypt(byte[] data, byte[] publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException {
+	public static byte[] encrypt (byte[] data, byte[] publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, SignatureException, IllegalBlockSizeException, BadPaddingException {
 		// Génération des paramètres pour le chiffrement	 
 		PublicKey pubKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKey)); 
 		
@@ -241,5 +241,31 @@ public class Tools {
 		return cipher.doFinal(data);
 		
 	} // encrypt ()
+	
+	public static byte[] encryptSym (byte[] data, SecretKey secretKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		// Generating parameters for cipher
+		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+        
+		// Initialize cipher
+        String cipherAlgorithm = "AES/CTR/NoPadding";
+        Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
+
+        return cipher.doFinal(data);
+        
+	} // encryptSym ()
+	
+	public static byte[] decryptSym (byte[] data, SecretKey secretKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		// Generating parameters for decipher
+		byte[] iv = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+        
+		// Initialize cipher
+        String cipherAlgorithm = "AES/CTR/NoPadding";
+        Cipher cipher = Cipher.getInstance(cipherAlgorithm);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+
+        return cipher.doFinal(data);
+        
+	} // encryptSym ()
 
 } // Tools

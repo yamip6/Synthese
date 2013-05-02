@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import utils.Crypto;
@@ -115,7 +114,7 @@ public class SlaveClient extends Client {
 		send(ciphered);
 		
 		// Receiving the signed certificate
-		System.out.println("Receiving the signed certificate.\n");
+		System.out.println("Receiving the signed certificate.\n"); // DEBUG
 		byte[] size = receive(4);
 		_certificate = receive(Utils.byteArrayToInt(size));
 		
@@ -191,22 +190,36 @@ public class SlaveClient extends Client {
 	    }
 	    
 	    byte[] sharedSecret = bKeyAgree.generateSecret();
-        SecretKey sk = new SecretKeySpec(sharedSecret, "AES");
+        _sk = new SecretKeySpec(sharedSecret, "AES");
 	    System.out.println("Secret: " + Utils.byteArrayToHexString(sharedSecret)); // DEBUG
 	    
 	} // doDiffieHellman ()
 	
-	public void transmitMessage () throws ClassNotFoundException, IOException {
+	public void sendMessage (String text) throws Exception {
+		System.out.println("Send a message (slave)."); // DEBUG
+		int cpt = 0;
+		byte[] count = Utils.intToByteArray(cpt, 2);
+		byte[] messageTmp = text.getBytes();
+		byte[] cipher = Tools.encryptSym(messageTmp, _sk);
+		byte[] message = Utils.concatenateByteArray(cipher, count);
+		
+		sendChat(Utils.intToByteArray(message.length, 4));
+		sendChat(message);
+		
+	} // sendMessage ()
+	
+	public void transmitMessage () throws Exception {
 		while(true) {
 			byte[] size = receiveChat(4);
-			System.out.println("dfhf"); // DEBUG
 			byte[] message = receiveChat(Utils.byteArrayToInt(size));
 			byte[] messageTmp = Arrays.copyOfRange(message, 0, message.length-2);
 			
 			int cpt = Utils.byteArrayToInt(Arrays.copyOfRange(message, message.length-2, message.length));
 			System.out.println("Counter : " + cpt); // DEBUG
 			if(cpt < _nbAcceptedClients-1) {
-				SlaveClientGUI.get_chat().get_fieldChat().setText(SlaveClientGUI.get_chat().get_fieldChat().getText() + "\n" + new String(messageTmp));
+				// Decrypting the message
+				byte[] plain = Tools.decryptSym(messageTmp, _sk);
+				SlaveClientGUI.get_chat().get_fieldChat().setText(SlaveClientGUI.get_chat().get_fieldChat().getText() + "\n" + new String(plain));
 				cpt += 1;
 				message = Utils.concatenateByteArray(messageTmp, Utils.intToByteArray(cpt, 2));
 				sendChat(size);

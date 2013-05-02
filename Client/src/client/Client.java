@@ -14,6 +14,7 @@ import java.io.OutputStream;
 
 import java.security.KeyPair;
 
+import javax.crypto.SecretKey;
 import javax.crypto.spec.DHParameterSpec;
 
 import utils.Tools;
@@ -53,6 +54,7 @@ public class Client {
 	/** Certificate of a client */
 	protected byte[] _certificate;
 	protected int _nbAcceptedClients;
+	protected SecretKey _sk;
 	
 	protected static BigInteger g512 = new BigInteger("1234567890", 16);
     protected static BigInteger p512 = new BigInteger("1234567890", 16);

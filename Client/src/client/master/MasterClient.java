@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.crypto.KeyAgreement;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import utils.Crypto;
@@ -409,12 +408,25 @@ public class MasterClient extends Client {
 	    }
 	    
 	    byte[] sharedSecret = aKeyAgree.generateSecret();
-	    SecretKey sk = new SecretKeySpec(sharedSecret, "AES");
+	    _sk = new SecretKeySpec(sharedSecret, "AES");
 	    System.out.println("Secret: " + Utils.byteArrayToHexString(sharedSecret)); // DEBUG
 	    
 	} // doDiffieHellman ()
 	
-	public void transmitMessage () throws ClassNotFoundException, IOException {
+	public void sendMessage (String text) throws Exception {
+		System.out.println("Send a message (master)."); // DEBUG
+		int cpt = 0;
+		byte[] count = Utils.intToByteArray(cpt, 2);
+		byte[] messageTmp = text.getBytes();
+		byte[] cipher = Tools.encryptSym(messageTmp, _sk);
+		byte[] message = Utils.concatenateByteArray(cipher, count);
+		
+		sendChat(Utils.intToByteArray(message.length, 4));
+		sendChat(message);
+		
+	} // sendMessage ()
+	
+	public void transmitMessage () throws Exception {
 		while(true) {
 			byte[] size = receiveChat(4);
 			byte[] message = receiveChat(Utils.byteArrayToInt(size));
@@ -423,7 +435,9 @@ public class MasterClient extends Client {
 			int cpt = Utils.byteArrayToInt(Arrays.copyOfRange(message, message.length-2, message.length));
 			System.out.println("Counter : " + cpt); // DEBUG
 			if(cpt < _nbAcceptedClients-1) {
-				MasterClientGUI.get_chat().get_fieldChat().setText(MasterClientGUI.get_chat().get_fieldChat().getText() + "\n" + new String(messageTmp));
+				// Decrypting the message
+				byte[] plain = Tools.decryptSym(messageTmp, _sk);
+				MasterClientGUI.get_chat().get_fieldChat().setText(MasterClientGUI.get_chat().get_fieldChat().getText() + "\n" + new String(plain));
 				cpt += 1;
 				message = Utils.concatenateByteArray(messageTmp, Utils.intToByteArray(cpt, 2));
 				sendChat(size);
