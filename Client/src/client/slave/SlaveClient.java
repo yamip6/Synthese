@@ -180,9 +180,12 @@ public class SlaveClient extends Client {
 			KeyFactory factory = KeyFactory.getInstance("DH");
 			PublicKey aPubKey = factory.generatePublic(new X509EncodedKeySpec(pubA));
 			
-		    key = bKeyAgree.doPhase(aPubKey, true);
-		    if(i == _nbAcceptedClients-2)
-		    	break;
+			if(i == _nbAcceptedClients-2) {
+		        key = bKeyAgree.doPhase(aPubKey, true);
+		        break;
+			} else
+				key = bKeyAgree.doPhase(aPubKey, false);
+			
 		    sendChat(Utils.intToByteArray(key.getEncoded().length, 4));
 			sendChat(key.getEncoded());
 	    }

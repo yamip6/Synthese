@@ -402,7 +402,10 @@ public class MasterClient extends Client {
 		        sendChat(Utils.intToByteArray(key.getEncoded().length, 4));
 			    sendChat(key.getEncoded());
 			}
-			key = aKeyAgree.doPhase(bPubKey, true);
+			if(i == _nbAcceptedClients-2)
+			    key = aKeyAgree.doPhase(bPubKey, true);
+			else
+				key = aKeyAgree.doPhase(bPubKey, false);
 	    }
 	    
 	    byte[] sharedSecret = aKeyAgree.generateSecret();
