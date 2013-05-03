@@ -23,6 +23,8 @@ import java.io.IOException;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import utils.Crypto;
@@ -189,9 +191,13 @@ public class SlaveClient extends Client {
 			sendChat(key.getEncoded());
 	    }
 	    
-	    byte[] sharedSecret = bKeyAgree.generateSecret();
-        _sk = new SecretKeySpec(sharedSecret, "AES");
-	    System.out.println("Secret: " + Utils.byteArrayToHexString(sharedSecret)); // DEBUG
+	   byte[] sharedSecret = bKeyAgree.generateSecret();
+	   SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WITHHMACSHA1");
+	   byte[] salt = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0, 0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2, (byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+	   PBEKeySpec keySpec = new PBEKeySpec(new String(sharedSecret).toCharArray(), salt, 1000, 128);
+	   _sk = new SecretKeySpec(factory.generateSecret(keySpec).getEncoded(), "AES");
+	    
+	   System.out.println("Secret: " + Utils.byteArrayToHexString(_sk.getEncoded()) + "\nSize : " + _sk.getEncoded().length + "\n"); // DEBUG
 	    
 	} // doDiffieHellman ()
 	
@@ -201,6 +207,7 @@ public class SlaveClient extends Client {
 		byte[] count = Utils.intToByteArray(cpt, 2);
 		byte[] messageTmp = text.getBytes();
 		byte[] cipher = Tools.encryptSym(messageTmp, _sk);
+		System.out.println("Send cipher: " + Utils.byteArrayToHexString(cipher)); // DEBUG
 		byte[] message = Utils.concatenateByteArray(cipher, count);
 		
 		sendChat(Utils.intToByteArray(message.length, 4));
@@ -213,6 +220,7 @@ public class SlaveClient extends Client {
 			byte[] size = receiveChat(4);
 			byte[] message = receiveChat(Utils.byteArrayToInt(size));
 			byte[] messageTmp = Arrays.copyOfRange(message, 0, message.length-2);
+			System.out.println("Receive cipher: " + Utils.byteArrayToHexString(messageTmp)); // DEBUG
 			
 			int cpt = Utils.byteArrayToInt(Arrays.copyOfRange(message, message.length-2, message.length));
 			System.out.println("Counter : " + cpt); // DEBUG
