@@ -11,6 +11,7 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.InetAddress;
 
 @SuppressWarnings("serial")
 public class Chat extends JPanel {
@@ -35,7 +36,10 @@ public class Chat extends JPanel {
 	        	public void actionPerformed (ActionEvent e) {
 	        		try {
 						MasterClientGUI.get_master().sendMessage(fieldForm.getText());
-						_fieldChat.setText(_fieldChat.getText() + "\n" + fieldForm.getText());
+						if(_fieldChat.getText().contentEquals(""))
+						    _fieldChat.setText(InetAddress.getLocalHost().getHostAddress() + ": " + fieldForm.getText());
+						else
+							_fieldChat.setText(_fieldChat.getText() + "\n" + InetAddress.getLocalHost().getHostAddress() + ": " + fieldForm.getText());
 						fieldForm.setText("");
 					} catch (Exception e1) {
 						e1.printStackTrace();

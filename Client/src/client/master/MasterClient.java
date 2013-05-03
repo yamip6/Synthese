@@ -351,7 +351,6 @@ public class MasterClient extends Client {
 	public void discussionGroupCreation () throws IOException, NoSuchAlgorithmException {
 		System.out.println("Création du groupe de discussion");
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
-		_nbAcceptedClients = _acceptedClients.size();
 		
 		for(Socket tmpSocket : _socketList) {
 			byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
@@ -403,7 +402,7 @@ public class MasterClient extends Client {
 		        sendChat(Utils.intToByteArray(key.getEncoded().length, 4));
 			    sendChat(key.getEncoded());
 			}
-			if(i == _nbAcceptedClients-2)
+			if(i == _acceptedClients.size()-2)
 			    key = aKeyAgree.doPhase(bPubKey, true);
 			else
 				key = aKeyAgree.doPhase(bPubKey, false);
@@ -442,10 +441,15 @@ public class MasterClient extends Client {
 			
 			int cpt = Utils.byteArrayToInt(Arrays.copyOfRange(message, message.length-2, message.length));
 			System.out.println("Counter : " + cpt); // DEBUG
-			if(cpt < _nbAcceptedClients-1) {
+			if(cpt < _acceptedClients.size()-1) {
 				// Decrypting the message
 				byte[] plain = Tools.decryptSym(messageTmp, _sk);
-				MasterClientGUI.get_chat().get_fieldChat().setText(MasterClientGUI.get_chat().get_fieldChat().getText() + "\n" + new String(plain));
+				int pos = _acceptedClients.size()-(cpt+1);
+				String emetteur = _acceptedClients.get(pos); // A toi cest pa la bonne ip
+				if(MasterClientGUI.get_chat().get_fieldChat().getText().contentEquals(""))
+				    MasterClientGUI.get_chat().get_fieldChat().setText(emetteur + ": " + new String(plain));
+				else
+					MasterClientGUI.get_chat().get_fieldChat().setText(MasterClientGUI.get_chat().get_fieldChat().getText() + "\n" + emetteur + ": " + new String(plain));
 				cpt += 1;
 				message = Utils.concatenateByteArray(messageTmp, Utils.intToByteArray(cpt, 2));
 				sendChat(size);

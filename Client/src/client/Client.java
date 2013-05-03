@@ -53,7 +53,6 @@ public class Client {
 	protected KeyPair _keyPair = null;
 	/** Certificate of a client */
 	protected byte[] _certificate;
-	protected int _nbAcceptedClients;
 	protected SecretKey _sk;
 	
 	protected static BigInteger g512 = new BigInteger("1234567890", 16);

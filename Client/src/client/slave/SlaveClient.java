@@ -38,6 +38,10 @@ public class SlaveClient extends Client {
 
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<String, String> _listGroups;
+	/** */
+	private ArrayList<String> _groupMembers;
+	/** */
+	private int _pos;
 	
 	/** Disposable certificate of a client */
 	private byte[] _dcertif;
@@ -143,17 +147,15 @@ public class SlaveClient extends Client {
 			return;
 		}
 		
-		ArrayList<String> listIps = Utils.byteArrayToList(list);
-		_nbAcceptedClients = listIps.size();
+		_groupMembers = Utils.byteArrayToList(list);
 		
 		// The client searchs its ip to determinate the ip following its own ip :
-		int pos;
-		if((pos = (listIps.indexOf(InetAddress.getLocalHost().getHostAddress()))) > -1){
-			connectionNeighboor(listIps.get(pos+1), _port);
+		if((_pos = (_groupMembers.indexOf(InetAddress.getLocalHost().getHostAddress()))) > -1){
+			connectionNeighboor(_groupMembers.get(_pos+1), _port);
 			System.out.println("I'm linked with my neighboor."); // DEBUG
 		}
 		else
-			throw new Exception("Ip doesn't exist in the list of accepted clients...");
+			System.err.println("Ip doesn't exist in the list of accepted clients."); // DEBUG
 		
 		startServerMode(_port);
 		closeConnectionServer();
@@ -173,7 +175,7 @@ public class SlaveClient extends Client {
 	    sendChat(Utils.intToByteArray(bPair.getPublic().getEncoded().length, 4));
 		sendChat(bPair.getPublic().getEncoded());
 		Key key = null;
-	    for(int i = 0; i < _nbAcceptedClients-1; ++i) {
+	    for(int i = 0; i < _groupMembers.size()-1; ++i) {
 		    // Receiving the publicKey of a
 		    System.out.println("Receiving a public key (a part of the secret key)."); // DEBUG
 		    byte[] size = receiveChat(4);
@@ -181,7 +183,7 @@ public class SlaveClient extends Client {
 			KeyFactory factory = KeyFactory.getInstance("DH");
 			PublicKey aPubKey = factory.generatePublic(new X509EncodedKeySpec(pubA));
 			
-			if(i == _nbAcceptedClients-2) {
+			if(i == _groupMembers.size()-2) {
 		        key = bKeyAgree.doPhase(aPubKey, true);
 		        break;
 			} else
@@ -224,10 +226,15 @@ public class SlaveClient extends Client {
 			
 			int cpt = Utils.byteArrayToInt(Arrays.copyOfRange(message, message.length-2, message.length));
 			System.out.println("Counter : " + cpt); // DEBUG
-			if(cpt < _nbAcceptedClients-1) {
+			if(cpt < _groupMembers.size()-1) {
 				// Decrypting the message
 				byte[] plain = Tools.decryptSym(messageTmp, _sk);
-				SlaveClientGUI.get_chat().get_fieldChat().setText(SlaveClientGUI.get_chat().get_fieldChat().getText() + "\n" + new String(plain));
+				int pos = _groupMembers.size()-(cpt+_pos+1);
+				String emetteur = _groupMembers.get(pos); // A toi cest pa la bonne ip
+				if(SlaveClientGUI.get_chat().get_fieldChat().getText().contentEquals(""))
+					SlaveClientGUI.get_chat().get_fieldChat().setText(emetteur + ": " + new String(plain));
+				else
+				    SlaveClientGUI.get_chat().get_fieldChat().setText(SlaveClientGUI.get_chat().get_fieldChat().getText() + "\n" + emetteur + ": " + new String(plain));
 				cpt += 1;
 				message = Utils.concatenateByteArray(messageTmp, Utils.intToByteArray(cpt, 2));
 				sendChat(size);
