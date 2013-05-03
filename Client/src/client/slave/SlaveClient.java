@@ -229,8 +229,12 @@ public class SlaveClient extends Client {
 			if(cpt < _groupMembers.size()-1) {
 				// Decrypting the message
 				byte[] plain = Tools.decryptSym(messageTmp, _sk);
-				int pos = _groupMembers.size()-(cpt+_pos+1);
-				String emetteur = _groupMembers.get(pos); // A toi cest pa la bonne ip
+				int pos;
+				if(_pos-(cpt+1) < 0)
+					pos = _pos-(cpt+1) + _groupMembers.size();
+				else
+					pos = _pos-(cpt+1);
+				String emetteur = _groupMembers.get(pos);
 				if(SlaveClientGUI.get_chat().get_fieldChat().getText().contentEquals(""))
 					SlaveClientGUI.get_chat().get_fieldChat().setText(emetteur + ": " + new String(plain));
 				else
