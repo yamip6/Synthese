@@ -58,8 +58,8 @@ public class MasterClient extends Client {
 	 * @param portServer is the port of the server         
 	 * @param username is the user name of the client bis    
 	 */
-	public MasterClient (String adressServer, int port, String username) {
-		super(username);
+	public MasterClient (String adressServer, int port, String username, String pseudo) {
+		super(username, pseudo);
 		
 		try {
 			connectionServer(adressServer, port);
@@ -303,6 +303,10 @@ public class MasterClient extends Client {
 			_tmpIn.read(data);
 			byte[] ciphered = new byte[Utils.byteArrayToInt(data)];
 			_tmpIn.read(ciphered);
+			System.out.println("Receiving the pseudo."); // DEBUG
+			_tmpIn.read(data);
+			byte[] pseudo = new byte[Utils.byteArrayToInt(data)];
+			_tmpIn.read(pseudo);
 			
 			// Transferring data to the server
 			System.out.println("Authorization request to server."); // DEBUG
@@ -329,6 +333,7 @@ public class MasterClient extends Client {
 				if(ok && !_acceptedClients.contains(_tmpSocket.getInetAddress().getHostAddress())) {
 					_acceptedClients.add(_tmpSocket.getInetAddress().getHostAddress()); // IPAdress of an enjoyed client is added in the ArrayList to create the ring
 					_socketList.add(_tmpSocket); // Record the client
+					_groupMembers.add(new String(pseudo));
 					MasterClientGUI.get_start().refresh(Utils.byteArrayToHexString(cerificateSigned));
 					System.out.println("A new client is added."); // DEBUG
 				} else
@@ -351,17 +356,21 @@ public class MasterClient extends Client {
 	public void discussionGroupCreation () throws IOException, NoSuchAlgorithmException {
 		System.out.println("Création du groupe de discussion");
 		_acceptedClients.add(InetAddress.getLocalHost().getHostAddress());
+		_groupMembers.add(_pseudo);
 		
-		for(Socket tmpSocket : _socketList) {
-			byte[] toSend = Utils.arrayListToByteArray(_acceptedClients);
-			_tmpOut = tmpSocket.getOutputStream();
-			byte[] hash = Tools.hash(toSend); // Hash to verifiy the integrity of the list
-			_tmpOut.write(Utils.intToByteArray(hash.length, 4));
-			_tmpOut.write(hash);
+		for(int i = 0; i < _socketList.size(); ++i) {
+			byte[] toSend = Utils.arrayListToByteArray(_groupMembers);
+			byte[] ipNext = _acceptedClients.get(i+1).getBytes();
+			_tmpOut = _socketList.get(i).getOutputStream();
+			byte[] hash = Tools.hash(ipNext); // Hash to verifiy the integrity of the list
 			_tmpOut.write(Utils.intToByteArray(toSend.length, 4));
 			_tmpOut.write(toSend);
+			_tmpOut.write(Utils.intToByteArray(ipNext.length, 4));
+			_tmpOut.write(ipNext);
+			_tmpOut.write(Utils.intToByteArray(hash.length, 4));
+			_tmpOut.write(hash);
 			_tmpOut.flush();
-			tmpSocket.close();
+			_socketList.get(i).close();
 		}
 
 		String ipNeighboor = _acceptedClients.get(0);
@@ -445,7 +454,7 @@ public class MasterClient extends Client {
 				// Decrypting the message
 				byte[] plain = Tools.decryptSym(messageTmp, _sk);
 				int pos = _acceptedClients.size()-1-(cpt+1);
-				String emetteur = _acceptedClients.get(pos);
+				String emetteur = _groupMembers.get(pos);
 				if(MasterClientGUI.get_chat().get_fieldChat().getText().contentEquals(""))
 				    MasterClientGUI.get_chat().get_fieldChat().setText(emetteur + " at " + Utils.getDate() + " : " + new String(plain));
 				else

@@ -1,7 +1,6 @@
 package client.slave;
 
 import java.net.DatagramPacket;
-import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 import java.security.InvalidKeyException;
@@ -14,7 +13,7 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -39,8 +38,6 @@ public class SlaveClient extends Client {
 	/** Groups associated with their creator (ip) which a client has been invited */
 	private HashMap<String, String> _listGroups;
 	/** */
-	private ArrayList<String> _groupMembers;
-	/** */
 	private int _pos;
 	
 	/** Disposable certificate of a client */
@@ -49,11 +46,11 @@ public class SlaveClient extends Client {
 	/**
 	 * Constructor
 	 */
-	public SlaveClient (String username) {
-		super(username);
+	public SlaveClient (String username, String pseudo) {
+		super(username, pseudo);
 		
 		try {
-			_dcertif = Tools.encryptWithPass(_username, new String(Utils.readPassword("Enter your password : ")), Crypto.loadPubKey(new File("server/public.key")).getEncoded()); // Pour l'instant un certificat=chiffré avec mon pass de pubKeyServer + on verra si autre chose
+			_dcertif = Tools.encryptWithPass(_username, new String(Utils.readPassword("Enter your password: ")), Crypto.loadPubKey(new File("server/public.key")).getEncoded()); // Pour l'instant un certificat=chiffré avec mon pass de pubKeyServer + on verra si autre chose
 			_listGroups = new HashMap<String,String>();
 			_broadcastSocket = new MulticastSocket(9999);
 			_broadcastSocket.joinGroup(_ipGroup);
@@ -118,6 +115,9 @@ public class SlaveClient extends Client {
 		System.out.println("Sending the encrypted."); // DEBUG
 		send(Utils.intToByteArray(ciphered.length, 4));
 		send(ciphered);
+		System.out.println("Sending my pseudo."); // DEBUG
+		send(Utils.intToByteArray(_pseudo.length(), 4));
+		send(_pseudo.getBytes());
 		
 		// Receiving the signed certificate
 		System.out.println("Receiving the signed certificate.\n"); // DEBUG
@@ -135,27 +135,24 @@ public class SlaveClient extends Client {
 		System.out.println("Linking neighboor."); // DEBUG
 		// Receiving the ip list of the ring (for this group)
 		_inServer = _clientSocket.getInputStream();
-		byte[] sizeHash = receive(4);
-		byte[] hash = receive(Utils.byteArrayToInt(sizeHash));
 		byte[] sizeList = receive(4);
 		byte[] list = receive(Utils.byteArrayToInt(sizeList));
+		byte[] size = receive(4);
+		byte[] ipNext = receive(Utils.byteArrayToInt(size));
+		byte[] sizeHash = receive(4);
+		byte[] hash = receive(Utils.byteArrayToInt(sizeHash));
 		closeConnectionServer();
 		
 		// Verifying the hash
-		if(!Arrays.equals(Tools.hash(list), hash)) {
-			System.err.println("The integrity of the list has not been verified."); // DEBUG
+		if(!Arrays.equals(Tools.hash(ipNext), hash)) {
+			System.err.println("The integrity of the ip next has not been verified."); // DEBUG
 			return;
 		}
 		
 		_groupMembers = Utils.byteArrayToList(list);
 		
-		// The client searchs its ip to determinate the ip following its own ip :
-		if((_pos = (_groupMembers.indexOf(InetAddress.getLocalHost().getHostAddress()))) > -1){
-			connectionNeighboor(_groupMembers.get(_pos+1), _port);
-			System.out.println("I'm linked with my neighboor."); // DEBUG
-		}
-		else
-			System.err.println("Ip doesn't exist in the list of accepted clients."); // DEBUG
+		connectionNeighboor(new String(ipNext), _port);
+		System.out.println("I'm linked with my neighboor."); // DEBUG
 		
 		startServerMode(_port);
 		closeConnectionServer();
@@ -265,11 +262,5 @@ public class SlaveClient extends Client {
 		_loop = loop;
 		
 	} // set_loop ()
-
-	public ArrayList<String> get_groupMembers() {
-		return _groupMembers;
-	}
-	
-	
 
 } // SlaveClient

@@ -22,13 +22,12 @@ import java.util.ArrayList;
 public class Chat extends JPanel {
 	
 	private JTextArea _fieldChat;
+	@SuppressWarnings("unused")
 	private ArrayList<String> _listParticip;
-	// Je fais le choix de ne pas mettre de widget affichant la liste des participants pour le moment. Néanmoins je l'ai préparé :
-    private JTable   _participants;
+    private JTable _participants;
     private ModelListAttendants _modele;
 	
 	private class East extends JPanel {
-		
 		
 		public East (){
 			_modele       = new ModelListAttendants();
@@ -37,6 +36,7 @@ public class Chat extends JPanel {
 			scrollPane.setPreferredSize(new Dimension(80, 260));
 			add(scrollPane);
 		} // East ()
+		
 	} // East
 	
 	private class South extends JPanel {
@@ -59,7 +59,7 @@ public class Chat extends JPanel {
 	        			if(_fieldChat.getText().contentEquals(""))
 						    _fieldChat.setText(InetAddress.getLocalHost().getHostAddress() + " at " + Utils.getDate() + " : " + fieldForm.getText());
 	        			else
-						    _fieldChat.setText(_fieldChat.getText() + "\n" + InetAddress.getLocalHost().getHostAddress() + " at " + Utils.getDate() + " : " + fieldForm.getText());
+						    _fieldChat.setText(_fieldChat.getText() + "\n" + SlaveClientGUI.get_slave().get_username() + " at " + Utils.getDate() + " : " + fieldForm.getText());
 						fieldForm.setText("");
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -96,9 +96,5 @@ public class Chat extends JPanel {
 		_participants.setModel(_modele);
         _modele.fireTableDataChanged();
 	}
-
-	
-	
-	
 	
 } // Chat

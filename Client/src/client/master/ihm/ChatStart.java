@@ -5,8 +5,6 @@ import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
-import client.slave.ihm.SlaveClientGUI;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionListener;
@@ -46,7 +44,7 @@ public class ChatStart extends JPanel {
         				try {
         					MasterClientGUI.get_master().set_loop(false);
 							MasterClientGUI.get_master().discussionGroupCreation();
-							MasterClientGUI.get_chat().set_listParticip(MasterClientGUI.get_master().get_acceptedClients());
+							MasterClientGUI.get_chat().set_listParticip(MasterClientGUI.get_master().get_groupMembers());
 							MasterClientGUI.get_master().doDiffieHellman();
 							MasterClientGUI.get_master().transmitMessage();
 						} catch (Exception e) {
@@ -71,7 +69,7 @@ public class ChatStart extends JPanel {
      * Call it to update the JTable
      */
     public void refresh (String certificate) {
-		_modele = new TableModelMaster(MasterClientGUI.get_master().get_acceptedClients(), certificate);
+		_modele = new TableModelMaster(MasterClientGUI.get_master().get_groupMembers(), certificate);
         _table.setModel(_modele);
         _modele.fireTableDataChanged();
         

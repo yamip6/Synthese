@@ -22,6 +22,7 @@ import client.slave.SlaveClient;
 public class Config extends JPanel {
 	/** User name of the client */
 	private JTextField _username;
+	private JTextField _pseudo;
 	
     /**
      * Constructor
@@ -36,17 +37,26 @@ public class Config extends JPanel {
         lblUserName.setBounds(127, 61, 84, 14);
         add(lblUserName);
         
+        JLabel lblPseudo = new JLabel("Pseudo:");
+        lblPseudo.setBounds(127, 93, 84, 14);
+        add(lblPseudo);
+        
         _username = new JTextField();
         _username.setBounds(217, 58, 106, 20);
         add(_username);
         _username.setColumns(10);
+        
+        _pseudo = new JTextField();
+        _pseudo.setBounds(217, 90, 106, 20);
+        add(_pseudo);
+        _pseudo.setColumns(10);
         
         JButton btnLaunchServer = new JButton("Start");
         btnLaunchServer.addActionListener(new ActionListener() {
         	@Override
         	public void actionPerformed (ActionEvent e) {
         		try {
-        			SlaveClientGUI.set_slave(new SlaveClient(_username.getText()));
+        			SlaveClientGUI.set_slave(new SlaveClient(_username.getText(), _pseudo.getText()));
         		    Thread t = new Thread(new Runnable() {
         				@Override
         				public void run () {

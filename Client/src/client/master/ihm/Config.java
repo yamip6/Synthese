@@ -15,6 +15,7 @@ import client.master.MasterClient;
 public class Config extends JPanel {
 	/** User name of the client bis */
 	private JTextField _username;
+	private JTextField _pseudo;
 	/** The name of the created group */
 	private JTextField _groupName;
 	/** IP server */
@@ -32,39 +33,48 @@ public class Config extends JPanel {
         setLayout(null);               
         
         JLabel lblUserName = new JLabel("User name:");
-        lblUserName.setBounds(109, 42, 114, 14);
+        lblUserName.setBounds(109, 22, 114, 14);
         add(lblUserName);
         
+        JLabel lblPseudo = new JLabel("Pseudo:");
+        lblPseudo.setBounds(109, 56, 84, 14);
+        add(lblPseudo);
+        
         JLabel lblGroupName = new JLabel("Group name:");
-        lblGroupName.setBounds(109, 82, 114, 14);
+        lblGroupName.setBounds(109, 88, 114, 14);
         add(lblGroupName);
         
         JLabel lblUriServer = new JLabel("IP server:");
-        lblUriServer.setBounds(109, 121, 114, 14);
+        lblUriServer.setBounds(109, 119, 114, 14);
         add(lblUriServer);
         
         JLabel lblPort = new JLabel("Port:");
-        lblPort.setBounds(109, 158, 114, 14);
+        lblPort.setBounds(109, 151, 114, 14);
         add(lblPort);
         
         _username = new JTextField();
-        _username.setBounds(220, 39, 106, 20);
+        _username.setBounds(220, 19, 106, 20);
         add(_username);
         _username.setColumns(10);
         
+        _pseudo = new JTextField();
+        _pseudo.setBounds(220, 53, 106, 20);
+        add(_pseudo);
+        _pseudo.setColumns(10);
+        
         _groupName = new JTextField();
-        _groupName.setBounds(220, 79, 106, 20);
+        _groupName.setBounds(220, 85, 106, 20);
         add(_groupName);
         _groupName.setColumns(10);
         
         _ipServer = new JTextField();
-        _ipServer.setBounds(220, 118, 106, 20);
+        _ipServer.setBounds(220, 116, 106, 20);
         add(_ipServer);
         _ipServer.setColumns(10);
         
         _port = new JTextField();
         _port.setText("50000");
-        _port.setBounds(220, 155, 106, 20);
+        _port.setBounds(220, 148, 106, 20);
         add(_port);
         _port.setColumns(10);
         
@@ -73,7 +83,7 @@ public class Config extends JPanel {
         	@Override
         	public void actionPerformed (ActionEvent e) {
         		try {
-        			MasterClientGUI.set_master(new MasterClient(_ipServer.getText(), Integer.parseInt(_port.getText()), _username.getText()));
+        			MasterClientGUI.set_master(new MasterClient(_ipServer.getText(), Integer.parseInt(_port.getText()), _username.getText(), _pseudo.getText()));
         			MasterClientGUI.get_master().requestGroupCreation(_groupName.getText());
         			MasterClientGUI.get_master().responseGroupCreation();
 					Thread t = new Thread(new Runnable() {
@@ -98,7 +108,7 @@ public class Config extends JPanel {
         		
         	} // actionPerformed ()
         });
-        btnLaunchServer.setBounds(166, 207, 114, 46);
+        btnLaunchServer.setBounds(160, 190, 123, 61);
         add(btnLaunchServer);   
         
     } // Config ()

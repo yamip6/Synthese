@@ -7,9 +7,6 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import client.slave.ihm.ModelListAttendants;
-
-
 import utils.Utils;
 
 import java.awt.BorderLayout;
@@ -62,7 +59,7 @@ public class Chat extends JPanel {
 						if(_fieldChat.getText().contentEquals(""))
 						    _fieldChat.setText(InetAddress.getLocalHost().getHostAddress() + " at " + Utils.getDate() + " : " + fieldForm.getText());
 						else
-							_fieldChat.setText(_fieldChat.getText() + "\n" + InetAddress.getLocalHost().getHostAddress() + " at " + Utils.getDate() + " : " + fieldForm.getText());
+							_fieldChat.setText(_fieldChat.getText() + "\n" + MasterClientGUI.get_master().get_username() + " at " + Utils.getDate() + " : " + fieldForm.getText());
 						fieldForm.setText("");
 					} catch (Exception e1) {
 						e1.printStackTrace();

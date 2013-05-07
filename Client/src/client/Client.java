@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.security.KeyPair;
+import java.util.ArrayList;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.DHParameterSpec;
@@ -23,6 +24,9 @@ public class Client {
 	
 	/** Client's username */
 	protected String _username;
+	/** Client's pseudo */
+	protected String _pseudo;
+	protected ArrayList<String> _groupMembers;
 	
 	/** Connection socket for client/server */
 	protected Socket _clientSocket;
@@ -54,9 +58,6 @@ public class Client {
 	/** Certificate of a client */
 	protected byte[] _certificate;
 	protected SecretKey _sk;
-	
-	protected static BigInteger g512 = new BigInteger("1234567890", 16);
-    protected static BigInteger p512 = new BigInteger("1234567890", 16);
 
 	/** Constant of validation during communication*/
 	public final byte[] OK = new byte[]{0x4f, 0x11};
@@ -124,7 +125,7 @@ public class Client {
 	 * @param username : User name of the client
 	 * @throws Exception
 	 */
-	public Client (String username) {
+	public Client (String username, String pseudo) {
 		try {
 			// Verifying the existence of a key pair
 			// Backup if necessary (if only one file is missing regenerating all)
@@ -132,7 +133,9 @@ public class Client {
 				Tools.keyGenerator();
 									
 		    _username = username;
+		    _pseudo = pseudo;
 			_ipGroup = InetAddress.getByName("239.255.80.84"); // A voir
+			_groupMembers = new ArrayList<String>();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -251,5 +254,21 @@ public class Client {
 		return data;
 		
 	} // receive ()
+
+	/**
+	 * 
+	 * @return
+	 */
+	public ArrayList<String> get_groupMembers() {
+		return _groupMembers;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String get_username() {
+		return _username;
+	}
 	
 } // Client
