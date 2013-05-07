@@ -9,8 +9,8 @@ public class ModelListAttendants extends AbstractTableModel{
 
 	private ArrayList<String> _members;
 	
-	public ModelListAttendants (ArrayList<String> members){
-		_members = members;
+	public ModelListAttendants (){
+		_members = new ArrayList<String>();
 	}
 	
 	 @Override
@@ -35,5 +35,11 @@ public class ModelListAttendants extends AbstractTableModel{
 		else
 			return 0;
 	}
+
+	public void set_members(ArrayList<String> _members) {
+		this._members = _members;
+	}
+	
+	
 
 }

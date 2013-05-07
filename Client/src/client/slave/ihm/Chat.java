@@ -11,24 +11,30 @@ import utils.Utils;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 @SuppressWarnings("serial")
 public class Chat extends JPanel {
 	
 	private JTextArea _fieldChat;
+	private ArrayList<String> _listParticip;
 	// Je fais le choix de ne pas mettre de widget affichant la liste des participants pour le moment. Néanmoins je l'ai préparé :
-	// private JTable   _participants;
+    private JTable   _participants;
+    private ModelListAttendants _modele;
 	
 	private class East extends JPanel {
-		private JTable     _participants;
+		
 		
 		public East (){
-			_participants = new JTable(new ModelListAttendants(SlaveClientGUI.get_slave().get_groupMembers()));
+			_modele       = new ModelListAttendants();
+			_participants = new JTable(_modele);
 			JScrollPane scrollPane = new JScrollPane(_participants);
+			scrollPane.setPreferredSize(new Dimension(80, 260));
 			add(scrollPane);
 		} // East ()
 	} // East
@@ -82,5 +88,17 @@ public class Chat extends JPanel {
 	public JTextArea get_fieldChat() {
 		return _fieldChat;
 	}
+
+	public void set_listParticip(ArrayList<String> _listParticip) {
+		this._listParticip = _listParticip;
+		_modele = new ModelListAttendants();
+		_modele.set_members(_listParticip);
+		_participants.setModel(_modele);
+        _modele.fireTableDataChanged();
+	}
+
+	
+	
+	
 	
 } // Chat

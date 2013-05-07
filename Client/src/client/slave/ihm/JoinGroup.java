@@ -56,7 +56,7 @@ public class JoinGroup extends JPanel {
         			SlaveClientGUI.get_slave().requestJoinGroup(grp, ip); // devrait rendre un booleen avec raison echec !!!
         			
         			SlaveClientGUI.get_slave().linkNeighboor();
-        			
+        			SlaveClientGUI.get_chat().set_listParticip(SlaveClientGUI.get_slave().get_groupMembers());
         			SlaveClientGUI._jgroup.setVisible(false);
         			SlaveClientGUI._chat.setVisible(true);
         			Thread t = new Thread(new Runnable() {

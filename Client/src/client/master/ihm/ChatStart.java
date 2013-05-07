@@ -5,6 +5,8 @@ import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
+import client.slave.ihm.SlaveClientGUI;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionListener;
@@ -44,6 +46,7 @@ public class ChatStart extends JPanel {
         				try {
         					MasterClientGUI.get_master().set_loop(false);
 							MasterClientGUI.get_master().discussionGroupCreation();
+							MasterClientGUI.get_chat().set_listParticip(MasterClientGUI.get_master().get_acceptedClients());
 							MasterClientGUI.get_master().doDiffieHellman();
 							MasterClientGUI.get_master().transmitMessage();
 						} catch (Exception e) {
