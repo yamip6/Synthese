@@ -29,7 +29,7 @@ public class ClientGUI extends JFrame {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             System.out.println("Erreur durant le chargement du look and feel.");
         }
-        // It forces all components to redraw the window with the system's look and feel 
+        // It forces all components to redraw the window with the system's look and feel
         SwingUtilities.updateComponentTreeUI(this);
         
         _config = new Config();
