@@ -15,7 +15,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.InetAddress;
 import java.util.ArrayList;
 
 @SuppressWarnings("serial")
@@ -57,9 +56,9 @@ public class Chat extends JPanel {
 	        		try {
 						MasterClientGUI.get_master().sendMessage(fieldForm.getText());
 						if(_fieldChat.getText().contentEquals(""))
-						    _fieldChat.setText(InetAddress.getLocalHost().getHostAddress() + " at " + Utils.getDate() + " : " + fieldForm.getText());
+						    _fieldChat.setText(MasterClientGUI.get_master().get_pseudo() + " at " + Utils.getDate() + " : " + fieldForm.getText());
 						else
-							_fieldChat.setText(_fieldChat.getText() + "\n" + MasterClientGUI.get_master().get_username() + " at " + Utils.getDate() + " : " + fieldForm.getText());
+							_fieldChat.setText(_fieldChat.getText() + "\n" + MasterClientGUI.get_master().get_pseudo() + " at " + Utils.getDate() + " : " + fieldForm.getText());
 						fieldForm.setText("");
 					} catch (Exception e1) {
 						e1.printStackTrace();

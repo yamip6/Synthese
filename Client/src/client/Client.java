@@ -267,8 +267,8 @@ public class Client {
 	 * 
 	 * @return
 	 */
-	public String get_username() {
-		return _username;
+	public String get_pseudo() {
+		return _pseudo;
 	}
 	
 } // Client
