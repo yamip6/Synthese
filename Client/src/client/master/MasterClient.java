@@ -444,12 +444,12 @@ public class MasterClient extends Client {
 			if(cpt < _acceptedClients.size()-1) {
 				// Decrypting the message
 				byte[] plain = Tools.decryptSym(messageTmp, _sk);
-				int pos = _acceptedClients.size()-(cpt+1);
-				String emetteur = _acceptedClients.get(pos); // A toi cest pa la bonne ip
+				int pos = _acceptedClients.size()-1-(cpt+1);
+				String emetteur = _acceptedClients.get(pos);
 				if(MasterClientGUI.get_chat().get_fieldChat().getText().contentEquals(""))
-				    MasterClientGUI.get_chat().get_fieldChat().setText(emetteur + ": " + new String(plain));
+				    MasterClientGUI.get_chat().get_fieldChat().setText(emetteur + " at " + Utils.getDate() + " : " + new String(plain));
 				else
-					MasterClientGUI.get_chat().get_fieldChat().setText(MasterClientGUI.get_chat().get_fieldChat().getText() + "\n" + emetteur + ": " + new String(plain));
+					MasterClientGUI.get_chat().get_fieldChat().setText(MasterClientGUI.get_chat().get_fieldChat().getText() + "\n" + " at " + Utils.getDate() + " : " + new String(plain));
 				cpt += 1;
 				message = Utils.concatenateByteArray(messageTmp, Utils.intToByteArray(cpt, 2));
 				sendChat(size);

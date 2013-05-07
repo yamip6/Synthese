@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import javax.swing.JOptionPane;
 
@@ -182,5 +183,14 @@ public class Utils {
 		}
 		
 	} // main ()
+	
+	public static String getDate () {
+		Calendar calendar = Calendar.getInstance();
+		int hours = calendar.get(Calendar.HOUR_OF_DAY);
+		int minutes = calendar.get(Calendar.MINUTE);
+		int seconds = calendar.get(Calendar.SECOND);
+		
+		return String.valueOf(hours) + "h" + String.valueOf(minutes) + "m" + String.valueOf(seconds) + "s";
+	}
 	
 } // Utils

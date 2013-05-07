@@ -236,9 +236,9 @@ public class SlaveClient extends Client {
 					pos = _pos-(cpt+1);
 				String emetteur = _groupMembers.get(pos);
 				if(SlaveClientGUI.get_chat().get_fieldChat().getText().contentEquals(""))
-					SlaveClientGUI.get_chat().get_fieldChat().setText(emetteur + ": " + new String(plain));
+					SlaveClientGUI.get_chat().get_fieldChat().setText(emetteur + " at " + Utils.getDate() + " : " + new String(plain));
 				else
-				    SlaveClientGUI.get_chat().get_fieldChat().setText(SlaveClientGUI.get_chat().get_fieldChat().getText() + "\n" + emetteur + ": " + new String(plain));
+				    SlaveClientGUI.get_chat().get_fieldChat().setText(SlaveClientGUI.get_chat().get_fieldChat().getText() + "\n" + emetteur + " at " + Utils.getDate() + " : " + new String(plain));
 				cpt += 1;
 				message = Utils.concatenateByteArray(messageTmp, Utils.intToByteArray(cpt, 2));
 				sendChat(size);

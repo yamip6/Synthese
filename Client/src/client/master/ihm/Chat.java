@@ -6,6 +6,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import utils.Utils;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -37,9 +39,9 @@ public class Chat extends JPanel {
 	        		try {
 						MasterClientGUI.get_master().sendMessage(fieldForm.getText());
 						if(_fieldChat.getText().contentEquals(""))
-						    _fieldChat.setText(InetAddress.getLocalHost().getHostAddress() + ": " + fieldForm.getText());
+						    _fieldChat.setText(InetAddress.getLocalHost().getHostAddress() + " at " + Utils.getDate() + " : " + fieldForm.getText());
 						else
-							_fieldChat.setText(_fieldChat.getText() + "\n" + InetAddress.getLocalHost().getHostAddress() + ": " + fieldForm.getText());
+							_fieldChat.setText(_fieldChat.getText() + "\n" + InetAddress.getLocalHost().getHostAddress() + " at " + Utils.getDate() + " : " + fieldForm.getText());
 						fieldForm.setText("");
 					} catch (Exception e1) {
 						e1.printStackTrace();
