@@ -266,4 +266,10 @@ public class SlaveClient extends Client {
 		
 	} // set_loop ()
 
+	public ArrayList<String> get_groupMembers() {
+		return _groupMembers;
+	}
+	
+	
+
 } // SlaveClient

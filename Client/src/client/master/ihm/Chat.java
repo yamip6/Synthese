@@ -3,8 +3,12 @@ package client.master.ihm;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+
+import client.slave.ihm.ModelListAttendants;
+
 
 import utils.Utils;
 
@@ -21,6 +25,16 @@ public class Chat extends JPanel {
 	private JTextArea _fieldChat;
 	// Je fais le choix de ne pas mettre de widget affichant la liste des participants pour le moment. Néanmoins je l'ai préparé :
 	// private JTable   _participants;
+	
+	private class East extends JPanel {
+		private JTable     _participants;
+		
+		public East (){
+			_participants = new JTable(new ModelListAttendants(MasterClientGUI.get_master().get_acceptedClients()));
+			JScrollPane scrollPane = new JScrollPane(_participants);
+			add(scrollPane);
+		} // East ()
+	} // East
 	
 	private class South extends JPanel {
 		private JButton send;
@@ -64,6 +78,7 @@ public class Chat extends JPanel {
 		setLayout(new BorderLayout());
         add(new JScrollPane(_fieldChat), BorderLayout.CENTER);
         add(new South(), BorderLayout.SOUTH);
+        add(new East(), BorderLayout.EAST); 
 		// est placé à droite (EAST) la liste des participants
         
 	} // Chat ()

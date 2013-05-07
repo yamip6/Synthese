@@ -3,6 +3,7 @@ package client.slave.ihm;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -22,9 +23,20 @@ public class Chat extends JPanel {
 	// Je fais le choix de ne pas mettre de widget affichant la liste des participants pour le moment. Néanmoins je l'ai préparé :
 	// private JTable   _participants;
 	
+	private class East extends JPanel {
+		private JTable     _participants;
+		
+		public East (){
+			_participants = new JTable(new ModelListAttendants(SlaveClientGUI.get_slave().get_groupMembers()));
+			JScrollPane scrollPane = new JScrollPane(_participants);
+			add(scrollPane);
+		} // East ()
+	} // East
+	
 	private class South extends JPanel {
 		private JButton send;
 		private JTextField fieldForm;
+		
 		
 		public South () {
 			send = new JButton("Send message");
@@ -58,13 +70,12 @@ public class Chat extends JPanel {
         setBackground(Color.WHITE);
         setLayout(null);
         
-		// _participants = new JTable(lemodele);
 		_fieldChat = new JTextArea(10,32);
 		_fieldChat.setEditable(false);
 		setLayout(new BorderLayout());
         add(new JScrollPane(_fieldChat), BorderLayout.CENTER);
         add(new South(), BorderLayout.SOUTH);
-		// est placé à droite (EAST) la liste des participants     
+        add(new East(), BorderLayout.EAST); 
         
 	} // Chat ()
 	
